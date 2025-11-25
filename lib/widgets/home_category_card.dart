@@ -24,10 +24,10 @@ class HomeCategoryCard extends StatelessWidget {
       color: Colors.transparent,
       elevation: 0,
       borderRadius: borderRadius,
-      child: Container(
+        child: Container(
         decoration: BoxDecoration(
           borderRadius: borderRadius,
-          gradient: gradient ?? WastecColors.cardGradient,
+          gradient: gradient ?? WastecColors.mutedCardGradient,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
