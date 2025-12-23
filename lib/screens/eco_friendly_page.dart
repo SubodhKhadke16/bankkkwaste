@@ -40,60 +40,70 @@ class EcoFriendlyPage extends StatelessWidget {
       tag: 'Organic',
       price: 150,
       icon: Icons.grass,
+      imagePath: 'assets/images/compressed-coco-peat.png',
     ),
     const _EcoProduct(
       name: 'Coir Compost Mix',
       tag: 'Compost',
       price: 180,
       icon: Icons.eco,
+      imagePath: 'assets/images/coco-coir-in-hands-scaled.jpg',
     ),
     const _EcoProduct(
       name: 'Biodegradable Garbage Bags',
       tag: 'Compostable',
       price: 120,
       icon: Icons.shopping_bag,
+      imagePath: 'assets/images/biodegrad-bag.jpg',
     ),
     const _EcoProduct(
       name: 'Edible Rice Plates (Pack of 10)',
       tag: 'Edible',
       price: 200,
       icon: Icons.restaurant,
+      imagePath: 'assets/images/edible-rice-plates.jpg',
     ),
     const _EcoProduct(
       name: 'Areca Leaf Bowls (Pack of 25)',
       tag: 'Compostable',
       price: 250,
       icon: Icons.rice_bowl,
+      imagePath: 'assets/images/eco-friendly-areca-leaf-bowl.jpeg',
     ),
     const _EcoProduct(
       name: 'Bamboo Toothbrush',
       tag: 'Reusable',
       price: 100,
       icon: Icons.brush,
+      imagePath: 'assets/images/bamboo-toothbrush.jpg',
     ),
     const _EcoProduct(
       name: 'Recycled Planters',
       tag: 'Recycled',
       price: 180,
       icon: Icons.local_florist,
+      imagePath: 'assets/images/recycled-planters.jpg',
     ),
     const _EcoProduct(
       name: 'Coir Pots (Pack of 5)',
       tag: 'Compostable',
       price: 220,
       icon: Icons.yard,
+      imagePath: 'assets/images/coir-pots.jpg',
     ),
     const _EcoProduct(
       name: 'Bio Enzyme Cleaner',
       tag: 'Natural',
       price: 190,
       icon: Icons.cleaning_services,
+      imagePath: 'assets/images/bio-enzyme-cleaner.jpg',
     ),
     const _EcoProduct(
       name: 'Cloth Shopping Bag',
       tag: 'Reusable',
       price: 130,
       icon: Icons.local_mall,
+      imagePath: 'assets/images/cloth-shopping-bag.jpg',
     ),
   ];
 
@@ -263,6 +273,7 @@ class EcoFriendlyPage extends StatelessWidget {
                 children: [
                   Container(
                     height: 120,
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: const BorderRadius.only(
@@ -270,11 +281,11 @@ class EcoFriendlyPage extends StatelessWidget {
                         topRight: Radius.circular(18),
                       ),
                     ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      product.icon,
-                      color: Colors.green.shade700,
-                      size: 48,
+                    child: Image.asset(
+                      product.imagePath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
                   ),
                   Expanded(
@@ -390,11 +401,9 @@ class ProductDetailPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: Colors.green.withOpacity(0.2)),
                 ),
-                alignment: Alignment.center,
-                child: Icon(
-                  product.icon,
-                  size: 72,
-                  color: Colors.green.shade700,
+                child: Image.asset(
+                  product.imagePath,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 20),
@@ -461,10 +470,12 @@ class _EcoProduct {
     required this.tag,
     required this.price,
     required this.icon,
+    required this.imagePath,
   });
 
   final String name;
   final String tag;
   final int price;
   final IconData icon;
+  final String imagePath;
 }

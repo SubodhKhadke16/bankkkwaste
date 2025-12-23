@@ -30,7 +30,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Placeholder for assets (add images in assets/ folder)
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+  assets:
+    - assets/images/
+    - assets/icons/
