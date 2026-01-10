@@ -2,7 +2,7 @@
 
 A modern Flutter application inspired by Swiggy's UI design, tailored for the waste management and scrap recycling industry. Wastec Bank empowers users to sell scrap, estimate prices, connect with nearby dealers, and earn eco-friendly rewards.
 
-## Features
+### Features
 
 ✅ **Swiggy-inspired UI Design**
 - Clean, modern interface with rounded cards and soft shadows
