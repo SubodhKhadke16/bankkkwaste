@@ -16,6 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   User? _currentUser;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -24,11 +25,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadCurrentUser() async {
-    final user = await _authService.getCurrentUser();
-    setState(() {
-      _currentUser = user;
-      _isLoading = false;
-    });
+    try {
+      final user = await _authService.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _isLoading = false;
+          _errorMessage = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to load profile: $e';
+        });
+      }
+    }
   }
 
   // Check if current user is the developer (using email only, since Firebase doesn't expose passwords)
@@ -110,6 +123,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
           elevation: 0,
         ),
         body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9F9F9),
+        appBar: AppBar(
+          title: const Text('Profile'),
+          backgroundColor: WastecColors.primaryGreen,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _errorMessage = null;
+                  });
+                  _loadCurrentUser();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 

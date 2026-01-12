@@ -12,9 +12,10 @@ import 'track_order_eco_screen.dart';
 
 /// Home screen with bottom navigation
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key, this.initialIndex = 0}) : super(key: key);
+  const HomeScreen({Key? key, this.initialIndex = 0, this.isLoggedIn = false}) : super(key: key);
 
   final int initialIndex;
+  final bool isLoggedIn;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -69,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         backgroundColor: WastecColors.primaryGreen,
         title: const LocationHeader(),
-        actions: const [ProfileWalletActions()],
+        actions: [ProfileWalletActions(isLoggedIn: widget.isLoggedIn)],
       );
     }
     
@@ -86,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white,
         ),
       ),
-      actions: const [ProfileWalletActions()],
+      actions: [ProfileWalletActions(isLoggedIn: widget.isLoggedIn)],
     );
   }
 
