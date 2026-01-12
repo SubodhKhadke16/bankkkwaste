@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:math' show cos, sqrt, asin;
 
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/saved_address.dart';
 

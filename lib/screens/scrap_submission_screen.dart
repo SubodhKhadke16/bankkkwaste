@@ -255,7 +255,7 @@ class _ScrapSubmissionScreenState extends State<ScrapSubmissionScreen> {
         return GestureDetector(
           onTap: () {
             setState(() {
-              selectedScrapType = scrap['name'] as String;
+              selectedScrapType = (scrap['name'] as String)!;
             });
           },
           child: Container(

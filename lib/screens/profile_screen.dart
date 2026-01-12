@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
+import '../services/auth_service.dart';
+import '../models/user.dart';
+import 'auth/login_screen.dart';
+import 'dev/developer_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
-  static final List<_ProfileOption> _options = [
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final AuthService _authService = AuthService();
+  User? _currentUser;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await _authService.getCurrentUser();
+    setState(() {
+      _currentUser = user;
+      _isLoading = false;
+    });
+  }
+
+  // Check if current user is the developer (using email only, since Firebase doesn't expose passwords)
+  bool get _isDeveloper => _currentUser?.email.toLowerCase() == 'rohit@test.com';
+
+  List<_ProfileOption> get _options => [
     _ProfileOption(
       title: 'My Orders / Scrap History',
       icon: Icons.history,
@@ -55,6 +85,12 @@ class ProfileScreen extends StatelessWidget {
       icon: Icons.settings,
       builder: (_) => const SettingsPage(),
     ),
+    if (_isDeveloper)
+      _ProfileOption(
+        title: '🔧 Developer Panel',
+        icon: Icons.developer_mode,
+        builder: (_) => const DeveloperScreen(),
+      ),
     const _ProfileOption(
       title: 'Log Out',
       icon: Icons.logout,
@@ -63,7 +99,21 @@ class ProfileScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9F9F9),
+        appBar: AppBar(
+          title: const Text('Profile'),
+          backgroundColor: WastecColors.primaryGreen,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
         title: const Text('Profile'),
@@ -90,10 +140,15 @@ class ProfileScreen extends StatelessWidget {
                         radius: 36,
                         backgroundColor:
                             WastecColors.primaryGreen.withOpacity(0.12),
-                        child: const Icon(
-                          Icons.person,
-                          size: 36,
-                          color: WastecColors.primaryGreen,
+                        child: Text(
+                          _currentUser?.name.isNotEmpty == true
+                              ? _currentUser!.name[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: WastecColors.primaryGreen,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -101,16 +156,16 @@ class ProfileScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Hello, Subodh!',
-                              style: TextStyle(
+                            Text(
+                              'Hello, ${_currentUser?.name ?? 'User'}!',
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'subodh@example.com',
+                              _currentUser?.email ?? 'user@example.com',
                               style: TextStyle(color: Colors.grey[700]),
                             ),
                             const SizedBox(height: 10),
@@ -180,6 +235,7 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
     );
+  }
 
   Widget _buildStatsSection() {
     final stats = [
@@ -240,25 +296,31 @@ class ProfileScreen extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-          title: const Text('Log Out'),
-          content: const Text('Are you sure you want to log out?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.of(context).pop();
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _authService.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Logged out successfully.')),
                 );
-              },
-              child: const Text('Log Out'),
-            ),
-          ],
-        ),
+              }
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -280,32 +342,35 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: WastecColors.primaryGreen, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
+        elevation: 0,
+        color: WastecColors.lightGreen,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-      ),
-    );
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, color: WastecColors.primaryGreen, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: WastecColors.primaryGreen,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 class _ProfileOption {
@@ -359,21 +424,27 @@ class MyOrdersPage extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final order = orders[index];
+          final isCompleted = order['status'] == 'Completed';
+
           return Card(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 1,
             child: ListTile(
+              contentPadding: const EdgeInsets.all(12),
               leading: CircleAvatar(
-                backgroundColor: WastecColors.primaryGreen.withOpacity(0.15),
-                child: const Icon(Icons.recycling, color: Colors.green),
+                backgroundColor: isCompleted
+                    ? Colors.green.withOpacity(0.15)
+                    : Colors.orange.withOpacity(0.15),
+                child: Icon(
+                  isCompleted ? Icons.check_circle : Icons.access_time,
+                  color: isCompleted ? Colors.green : Colors.orange,
+                ),
               ),
-              title: Text('Order ${order['id']}'),
-              subtitle: Text('${order['date']} • ${order['status']}'),
-              trailing: Text(
-                order['amount']!,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              onTap: () {},
+              title: Text(order['id']!,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle:
+                  Text('${order['date']} • ${order['status']}'),
+              trailing: Text(order['amount']!,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
           );
         },
@@ -386,140 +457,90 @@ class TrackOrdersPage extends StatelessWidget {
   const TrackOrdersPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final steps = [
-      {'title': 'Pickup Scheduled', 'subtitle': 'Pickup on 12 Nov, 10:00 AM'},
-      {'title': 'Rider Assigned', 'subtitle': 'Rahul (8823-XX-XXXX)'},
-      {'title': 'Pickup In Progress', 'subtitle': 'Rider is on the way'},
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Track My Orders'),
-        backgroundColor: WastecColors.primaryGreen,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: steps.length,
-        itemBuilder: (context, index) {
-          final step = steps[index];
-          return Column(
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Track Orders'),
+          backgroundColor: WastecColors.primaryGreen,
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: WastecColors.primaryGreen.withOpacity(0.15),
-                  child: Icon(
-                    index == steps.length - 1
-                        ? Icons.directions_bike
-                        : Icons.check,
-                    color: WastecColors.primaryGreen,
-                  ),
-                ),
-                title: Text(step['title']!),
-                subtitle: Text(step['subtitle']!),
-              ),
-              if (index < steps.length - 1)
-                Padding(
-                  padding: const EdgeInsets.only(left: 36),
-                  child: Container(
-                    height: 24,
-                    width: 2,
-                    color: WastecColors.primaryGreen.withOpacity(0.2),
-                  ),
-                ),
+              Icon(Icons.local_shipping,
+                  size: 64, color: WastecColors.primaryGreen),
+              SizedBox(height: 16),
+              Text('No active orders to track',
+                  style: TextStyle(fontSize: 16)),
             ],
-          );
-        },
-      ),
-    );
-  }
+          ),
+        ),
+      );
 }
 
 class RewardsPage extends StatelessWidget {
   const RewardsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final rewardTitles = [
+      'First Scrap Submission',
+      'Recycled 50kg Milestone',
+      'Eco Warrior Badge'
+    ];
+    final rewardPoints = ['+50 pts', '+100 pts', '+75 pts'];
+
+    return Scaffold(
       appBar: AppBar(
-        title: const Text('Rewards'),
+        title: const Text('Reward Points'),
         backgroundColor: WastecColors.primaryGreen,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              color: WastecColors.primaryGreen,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              child: const Padding(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Eco Balance',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '120 Points',
-                      style: TextStyle(
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            color: WastecColors.primaryGreen,
+            child: const Column(
+              children: [
+                Text('Total Points',
+                    style: TextStyle(color: Colors.white70, fontSize: 14)),
+                SizedBox(height: 8),
+                Text('120',
+                    style: TextStyle(
                         color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text('Keep recycling to earn more!',
+                    style: TextStyle(color: Colors.white70, fontSize: 12)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: rewardTitles.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) => Card(
+                  elevation: 0,
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor:
+                          WastecColors.primaryGreen.withOpacity(0.15),
+                      child: const Icon(Icons.card_giftcard,
+                          color: Colors.green),
                     ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Redeem your Eco Points for discounts on pickup charges and partner stores.',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
-                    ),
-                  ],
+                    title: Text(rewardTitles[index]),
+                    subtitle: const Text('Earned on 08 Nov 2025'),
+                    trailing: Text(rewardPoints[index],
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
                 ),
-              ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Recent Rewards',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.separated(
-                itemCount: 3,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  const rewardTitles = [
-                    'Pickup Bonus',
-                    'Referral Bonus',
-                    'Plastic Drive'
-                  ];
-                  const rewardPoints = ['+20 pts', '+50 pts', '+10 pts'];
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor:
-                            WastecColors.primaryGreen.withOpacity(0.15),
-                        child: const Icon(Icons.card_giftcard,
-                            color: Colors.green),
-                      ),
-                      title: Text(rewardTitles[index]),
-                      subtitle: const Text('Earned on 08 Nov 2025'),
-                      trailing: Text(rewardPoints[index],
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
 }
 
 class SettingsPage extends StatefulWidget {
@@ -535,64 +556,55 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: WastecColors.primaryGreen,
-      ),
-      body: ListView(
-        children: [
-          SwitchListTile(
-            value: _darkMode,
-            onChanged: (value) => setState(() => _darkMode = value),
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Reduce glare and save battery'),
-            activeThumbColor: WastecColors.primaryGreen,
-          ),
-          const Divider(),
-          ListTile(
-            title: const Text('Language'),
-            subtitle: Text(_language),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final selected = await showModalBottomSheet<String>(
-                context: context,
-                builder: (sheetContext) {
-                  final languages = ['English', 'Hindi', 'Marathi'];
-                  return SafeArea(
-                    child: ListView(
-                      children: languages
-                          .map(
-                            (language) => ListTile(
-                              title: Text(language),
-                              trailing: language == _language
-                                  ? const Icon(Icons.check,
-                                      color: WastecColors.primaryGreen)
-                                  : null,
-                              onTap: () =>
-                                  Navigator.pop(sheetContext, language),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  );
-                },
-              );
-
-              if (selected != null && mounted) {
-                setState(() => _language = selected);
-              }
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.notifications_active),
-            title: const Text('Push Notifications'),
-            subtitle: const Text('Manage waste pickup reminders'),
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
+        appBar: AppBar(
+          title: const Text('Settings'),
+          backgroundColor: WastecColors.primaryGreen,
+        ),
+        body: ListView(
+          children: [
+            SwitchListTile(
+              value: _darkMode,
+              title: const Text('Dark Mode'),
+              subtitle: const Text('Toggle dark/light theme'),
+              onChanged: (value) {
+                setState(() => _darkMode = value);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language'),
+              subtitle: Text(_language),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                showDialog<String>(
+                  context: context,
+                  builder: (context) => SimpleDialog(
+                    title: const Text('Select Language'),
+                    children: ['English', 'Hindi', 'Kannada']
+                        .map((lang) => SimpleDialogOption(
+                              child: Text(lang),
+                              onPressed: () => Navigator.pop(context, lang),
+                            ))
+                        .toList(),
+                  ),
+                ).then((selected) {
+                  if (selected != null) {
+                    setState(() => _language = selected);
+                  }
+                });
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.notifications_active),
+              title: const Text('Push Notifications'),
+              subtitle: const Text('Manage waste pickup reminders'),
+              onTap: () {},
+            ),
+          ],
+        ),
+      );
 }
 
 class ComingSoonPage extends StatelessWidget {
@@ -602,18 +614,18 @@ class ComingSoonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: WastecColors.primaryGreen,
-      ),
-      body: Center(
-        child: Text(
-          '$title\nComing Soon',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        appBar: AppBar(
+          title: Text(title),
+          backgroundColor: WastecColors.primaryGreen,
         ),
-      ),
-    );
+        body: Center(
+          child: Text(
+            '$title\nComing Soon',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
 }
 
 class EditProfilePage extends StatelessWidget {
@@ -621,55 +633,36 @@ class EditProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        backgroundColor: WastecColors.primaryGreen,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Phone Number',
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: WastecColors.primaryGreen,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Save Changes'),
-              ),
-            ),
-          ],
+        appBar: AppBar(
+          title: const Text('Edit Profile'),
+          backgroundColor: WastecColors.primaryGreen,
         ),
-      ),
-    );
+        body: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Phone',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }

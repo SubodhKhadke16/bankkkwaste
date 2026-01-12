@@ -130,7 +130,7 @@ class WastecBankScreen extends StatelessWidget {
   // Section A: Trending Rates (Horizontal Scroll)
   Widget _buildTrendingRates() {
     final rates = [
-      {'name': 'Paper', 'price': '₹6/kg', 'icon': Icons.description},
+      {'name': 'Paper', 'price': '₹6/kg', 'icon': Icons.description, 'imagePath':'assets/images/papers.png'},
       {'name': 'Plastic', 'price': '₹2/kg', 'icon': Icons.recycling},
       {'name': 'Metal', 'price': '₹17/kg', 'icon': Icons.hardware},
       {'name': 'E-Waste', 'price': '₹10/kg', 'icon': Icons.devices},
@@ -170,16 +170,30 @@ class WastecBankScreen extends StatelessWidget {
                 children: [
                   Container(
                     height: 120,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: WastecColors.lightGreen,
-                      borderRadius: const BorderRadius.only(
+                      borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(18),
                         topRight: Radius.circular(18),
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(
-                      rate['icon'] as IconData,
+                    child: rate['imagePath'] != null
+                        ? ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(18),
+                              topRight: Radius.circular(18),
+                            ),
+                            child: Image.asset(
+                              rate['imagePath']! as String,
+                              height: 120,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                    
+                    :Icon(
+                      rate['icon']! as IconData,
                       color: WastecColors.primaryGreen,
                       size: 48,
                     ),
@@ -192,7 +206,7 @@ class WastecBankScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              rate['name'] as String,
+                              rate['name']! as String,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -205,7 +219,7 @@ class WastecBankScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            rate['price'] as String,
+                            rate['price']! as String,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

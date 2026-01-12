@@ -2,19 +2,6 @@ import 'dart:convert';
 
 /// Model representing a saved address
 class SavedAddress {
-  final String id;
-  final String label; // e.g., "Home", "Work", "Other"
-  final String addressLine1;
-  final String addressLine2;
-  final String landmark;
-  final String city;
-  final String state;
-  final String pincode;
-  final double? latitude;
-  final double? longitude;
-  final double? distanceKm; // Distance from current location
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   SavedAddress({
     required this.id,
@@ -32,6 +19,36 @@ class SavedAddress {
     DateTime? updatedAt,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  /// Create from JSON
+  factory SavedAddress.fromJson(Map<String, dynamic> json) => SavedAddress(
+        id: json['id'] as String,
+        label: json['label'] as String,
+        addressLine1: json['addressLine1'] as String,
+        addressLine2: json['addressLine2'] as String? ?? '',
+        landmark: json['landmark'] as String? ?? '',
+        city: json['city'] as String,
+        state: json['state'] as String,
+        pincode: json['pincode'] as String,
+        latitude: json['latitude'] as double?,
+        longitude: json['longitude'] as double?,
+        distanceKm: json['distanceKm'] as double?,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        updatedAt: DateTime.parse(json['updatedAt'] as String),
+      );
+  final String id;
+  final String label; // e.g., "Home", "Work", "Other"
+  final String addressLine1;
+  final String addressLine2;
+  final String landmark;
+  final String city;
+  final String state;
+  final String pincode;
+  final double? latitude;
+  final double? longitude;
+  final double? distanceKm; // Distance from current location
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   /// Get formatted full address
   String get fullAddress {
@@ -71,23 +88,6 @@ class SavedAddress {
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
-
-  /// Create from JSON
-  factory SavedAddress.fromJson(Map<String, dynamic> json) => SavedAddress(
-        id: json['id'] as String,
-        label: json['label'] as String,
-        addressLine1: json['addressLine1'] as String,
-        addressLine2: json['addressLine2'] as String? ?? '',
-        landmark: json['landmark'] as String? ?? '',
-        city: json['city'] as String,
-        state: json['state'] as String,
-        pincode: json['pincode'] as String,
-        latitude: json['latitude'] as double?,
-        longitude: json['longitude'] as double?,
-        distanceKm: json['distanceKm'] as double?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        updatedAt: DateTime.parse(json['updatedAt'] as String),
-      );
 
   /// Create a copy with updated fields
   SavedAddress copyWith({

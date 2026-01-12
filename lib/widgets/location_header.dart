@@ -15,7 +15,7 @@ class LocationHeader extends StatefulWidget {
 class _LocationHeaderState extends State<LocationHeader> {
   final LocationService _locationService = LocationService();
   String _selectedAddress = 'Select Location';
-  String _deliveryTime = '5 minutes';
+  final String _deliveryTime = '5 minutes';
   bool _isLoading = true;
 
   @override
@@ -70,7 +70,7 @@ class _LocationHeaderState extends State<LocationHeader> {
 
   @override
   Widget build(BuildContext context) => Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: WastecColors.primaryGreen,
       ),
       child: Row(
@@ -116,16 +116,14 @@ class _LocationHeaderState extends State<LocationHeader> {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  _isLoading
-                      ? const SizedBox(
+                  if (_isLoading) const SizedBox(
                           width: 100,
                           height: 12,
                           child: LinearProgressIndicator(
                             backgroundColor: Colors.transparent,
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
-                        )
-                      : Text(
+                        ) else Text(
                           _selectedAddress,
                           style: TextStyle(
                             fontSize: 13,
@@ -223,16 +221,14 @@ class _CompactLocationHeaderState extends State<CompactLocationHeader> {
               color: WastecColors.primaryGreen,
             ),
             const SizedBox(width: 6),
-            _isLoading
-                ? const SizedBox(
+            if (_isLoading) const SizedBox(
                     width: 80,
                     height: 12,
                     child: LinearProgressIndicator(
                       backgroundColor: Colors.transparent,
                       valueColor: AlwaysStoppedAnimation<Color>(WastecColors.primaryGreen),
                     ),
-                  )
-                : Flexible(
+                  ) else Flexible(
                     child: Text(
                       _selectedAddress,
                       style: const TextStyle(

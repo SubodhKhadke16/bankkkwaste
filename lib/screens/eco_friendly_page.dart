@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../config/theme.dart';
-import '../widgets/location_header.dart';
 import '../widgets/quick_access_row.dart';
-import 'wastec_bank_screen.dart';
 
 /// Displays sustainable living ideas and eco product listings.
 class EcoFriendlyPage extends StatelessWidget {
@@ -195,6 +192,7 @@ class EcoFriendlyPage extends StatelessWidget {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
+                        
                         color: Colors.green,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
@@ -303,6 +301,7 @@ class EcoFriendlyPage extends StatelessWidget {
                               color: Colors.green.shade100,
                               borderRadius: BorderRadius.circular(8),
                             ),
+                            
                             child: Text(
                               product.tag,
                               style: TextStyle(
@@ -310,7 +309,9 @@ class EcoFriendlyPage extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                                 color: Colors.green.shade800,
                               ),
+                            
                             ),
+                            
                           ),
                           const SizedBox(height: 8),
                           Expanded(

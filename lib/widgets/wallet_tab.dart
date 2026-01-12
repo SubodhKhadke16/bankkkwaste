@@ -6,12 +6,12 @@ class WalletTab extends StatelessWidget {
   const WalletTab({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
+  Widget build(BuildContext context) => const SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               _WalletBalanceCard(),
               SizedBox(height: 20),
               Text(
@@ -45,10 +45,10 @@ class _WalletQuickActions extends StatelessWidget {
   const _WalletQuickActions();
 
   @override
-  Widget build(BuildContext context) => Wrap(
+  Widget build(BuildContext context) => const Wrap(
         spacing: 12,
         runSpacing: 12,
-        children: const [
+        children: [
           _WalletQuickAction(
             icon: Icons.add_circle_outline,
             label: 'Add Money',
@@ -73,9 +73,9 @@ class _WalletServicesList extends StatelessWidget {
   const _WalletServicesList();
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           _WalletServiceTile(
             icon: Icons.receipt_long,
             title: 'Transaction History',

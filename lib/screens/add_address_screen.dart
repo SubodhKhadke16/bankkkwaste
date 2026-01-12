@@ -442,7 +442,7 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.location_on,
               size: 64,
               color: WastecColors.primaryGreen,

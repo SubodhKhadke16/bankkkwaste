@@ -159,41 +159,142 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
 
   Widget _buildBottomNavBar(BuildContext context) {
     // Waste Bank navbar: Home, Waste Bank, Track Order, Wallet
-    return BottomNavigationBar(
-      currentIndex: 2, // Track Order is at index 2
-      selectedItemColor: WastecColors.primaryGreen,
-      unselectedItemColor: WastecColors.mediumGray,
-      onTap: (i) {
-        if (i == 0) {
-          // Navigate to Home Screen
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const HomeScreen(),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        } else if (i == 1) {
-          // Navigate back to Waste Bank
-          Navigator.of(context).pop();
-        } else if (i == 2) {
-          // Stay on Track Order
-        } else if (i == 3) {
-          // Navigate to Home Screen with Wallet tab (index 3)
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const HomeScreen(initialIndex: 3),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        }
-      },
-      type: BottomNavigationBarType.fixed,
-      items: [
-        const BottomNavigationBarItem(icon: Icon(Icons.arrow_back), label: 'Home'),
-        const BottomNavigationBarItem(icon: Icon(Icons.recycling), label: 'Waste Bank'),
-        const BottomNavigationBarItem(icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
-        const BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              // Home/Back button
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const HomeScreen(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.arrow_back,
+                        color: WastecColors.mediumGray,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Home',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.mediumGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Vertical divider
+              Container(
+                width: 1,
+                height: 35,
+                color: Colors.grey.shade300,
+              ),
+              // Waste Bank
+              Expanded(
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.recycling,
+                        color: WastecColors.mediumGray,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Waste Bank',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.mediumGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Track Order (selected)
+              Expanded(
+                child: InkWell(
+                  onTap: () {},
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.local_shipping_outlined,
+                        color: WastecColors.primaryGreen,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Track Order',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.primaryGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Wallet
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const HomeScreen(initialIndex: 3),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: WastecColors.mediumGray,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Wallet',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.mediumGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -208,8 +309,8 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     // Determine icon based on order stage
     final isCompleted = stage >= 5;
     final iconData = isCompleted ? Icons.verified : Icons.local_shipping_outlined;
-    final iconBackground = isCompleted ? Color(0xFFD1F0EC) : Color(0xFFFFE8D6);
-    final iconColor = isCompleted ? Color(0xFF0B8C54) : Color(0xFFFF8C32);
+    final iconBackground = isCompleted ? const Color(0xFFD1F0EC) : const Color(0xFFFFE8D6);
+    final iconColor = isCompleted ? const Color(0xFF0B8C54) : const Color(0xFFFF8C32);
 
     return GestureDetector(
       onTap: () => _showOrderDetails(context, order),
@@ -348,7 +449,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
             ),
             const SizedBox(height: 12),
             // View Details Hint
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
@@ -359,7 +460,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 10,
@@ -396,8 +497,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     );
   }
 
-  Widget _buildEmptyState(String title, String subtitle) {
-    return Center(
+  Widget _buildEmptyState(String title, String subtitle) => Center(
       child: Column(
         children: [
           const SizedBox(height: 40),
@@ -428,15 +528,13 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
         ],
       ),
     );
-  }
 
   Widget _buildTabButton({
     required String label,
     required IconData icon,
     required bool isActive,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
+  }) => GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -480,5 +578,4 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
         ),
       ),
     );
-  }
 }

@@ -334,7 +334,7 @@ class _SelectLocationScreenState extends State<SelectLocationScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          ..._savedAddresses.map((address) => _buildSavedAddressTile(address)),
+          ..._savedAddresses.map(_buildSavedAddressTile),
         ],
 
         if (_isLoadingAddresses)
@@ -351,9 +351,8 @@ class _SelectLocationScreenState extends State<SelectLocationScreen> {
     required IconData icon,
     required Color iconColor,
     required String title,
-    Widget? trailing,
+    required VoidCallback onTap, Widget? trailing,
     bool isLoading = false,
-    required VoidCallback onTap,
   }) =>
       InkWell(
         onTap: isLoading ? null : onTap,

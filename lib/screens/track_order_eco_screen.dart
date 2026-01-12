@@ -53,8 +53,7 @@ class TrackOrderEcoScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         elevation: 0,
@@ -149,10 +148,8 @@ class TrackOrderEcoScreen extends StatelessWidget {
       ),
       bottomNavigationBar: _buildBottomNavBar(context),
     );
-  }
 
-  Widget _buildOrderCard(BuildContext context, Map<String, dynamic> order) {
-    return GestureDetector(
+  Widget _buildOrderCard(BuildContext context, Map<String, dynamic> order) => GestureDetector(
       onTap: () => _showOrderDetails(context, order),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -226,7 +223,6 @@ class TrackOrderEcoScreen extends StatelessWidget {
         ),
       ),
     );
-  }
 
   void _showOrderDetails(BuildContext context, Map<String, dynamic> order) {
     showModalBottomSheet(
@@ -365,9 +361,9 @@ class TrackOrderEcoScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
+                                  const Text(
                                     '₹299',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.black87,
@@ -382,7 +378,7 @@ class TrackOrderEcoScreen extends StatelessWidget {
                       const SizedBox(height: 20),
 
                       // Delivery Status Timeline
-                      Text(
+                      const Text(
                         'Delivery Status',
                         style: TextStyle(
                           fontSize: 16,
@@ -413,7 +409,7 @@ class TrackOrderEcoScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            Text(
+                            const Text(
                               'Asha Nagar Ward 12, Pune - 411001',
                               style: TextStyle(
                                 fontSize: 14,
@@ -592,8 +588,7 @@ class TrackOrderEcoScreen extends StatelessWidget {
     required IconData icon,
     required String label,
     required String date,
-  }) {
-    return SizedBox(
+  }) => SizedBox(
       width: 70,
       child: Column(
         children: [
@@ -634,45 +629,145 @@ class TrackOrderEcoScreen extends StatelessWidget {
         ],
       ),
     );
-  }
 
   Widget _buildBottomNavBar(BuildContext context) {
     // Eco-Friendly navbar: Home, Eco-Friendly, Track Order, Wallet
-    return BottomNavigationBar(
-      currentIndex: 2, // Track Order is at index 2
-      selectedItemColor: WastecColors.primaryGreen,
-      unselectedItemColor: WastecColors.mediumGray,
-      onTap: (i) {
-        if (i == 0) {
-          // Navigate to Home Screen
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const HomeScreen(),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        } else if (i == 1) {
-          // Navigate back to Eco-Friendly
-          Navigator.of(context).pop();
-        } else if (i == 2) {
-          // Stay on Track Order
-        } else if (i == 3) {
-          // Navigate to Home Screen with Wallet tab (index 3)
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const HomeScreen(initialIndex: 3),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        }
-      },
-      type: BottomNavigationBarType.fixed,
-      items: [
-        const BottomNavigationBarItem(icon: Icon(Icons.arrow_back), label: 'Home'),
-        const BottomNavigationBarItem(icon: Icon(Icons.eco), label: 'Eco-Friendly'),
-        const BottomNavigationBarItem(icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
-        const BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              // Home/Back button
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const HomeScreen(),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.arrow_back,
+                        color: WastecColors.mediumGray,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Home',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.mediumGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Vertical divider
+              Container(
+                width: 1,
+                height: 35,
+                color: Colors.grey.shade300,
+              ),
+              // Eco-Friendly
+              Expanded(
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.eco,
+                        color: WastecColors.mediumGray,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Eco-Friendly',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.mediumGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Track Order (selected)
+              Expanded(
+                child: InkWell(
+                  onTap: () {},
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.local_shipping_outlined,
+                        color: WastecColors.primaryGreen,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Track Order',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.primaryGreen,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Wallet
+              Expanded(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      PageRouteBuilder(
+                        pageBuilder: (_, __, ___) => const HomeScreen(initialIndex: 3),
+                        transitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
+                        color: WastecColors.mediumGray,
+                        size: 24,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Wallet',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WastecColors.mediumGray,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

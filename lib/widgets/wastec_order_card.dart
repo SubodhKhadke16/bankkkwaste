@@ -2,138 +2,334 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 
-class WastecOrderCard extends StatelessWidget {
+class WastecOrderCard extends StatefulWidget {
   const WastecOrderCard({required this.order, super.key});
 
   final Map<String, dynamic> order;
 
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: WastecColors.primaryGreen.withOpacity(0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+  State<WastecOrderCard> createState() => _WastecOrderCardState();
+}
+
+class _WastecOrderCardState extends State<WastecOrderCard> with SingleTickerProviderStateMixin {
+  bool _isExpanded = false;
+  late AnimationController _animationController;
+  late Animation<double> _rotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    
+    _rotationAnimation = Tween<double>(begin: 0, end: 0.5).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.order;
+    final orderColor = order['color']! as Color;
+    
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _isExpanded 
+                ? orderColor.withOpacity(0.15)
+                : Colors.black.withOpacity(0.06),
+            blurRadius: _isExpanded ? 20 : 10,
+            offset: Offset(0, _isExpanded ? 10 : 4),
+          ),
+        ],
+      ),
+      child: Material(
+        elevation: 0,
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _isExpanded 
+                  ? orderColor.withOpacity(0.5)
+                  : orderColor.withOpacity(0.15),
+              width: _isExpanded ? 2.5 : 1.5,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: (order['color']! as Color).withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    order['icon']! as IconData,
-                    color: order['color']! as Color,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          child: Column(
+            children: [
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                    if (_isExpanded) {
+                      _animationController.forward();
+                    } else {
+                      _animationController.reverse();
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(20),
+                splashColor: orderColor.withOpacity(0.1),
+                highlightColor: orderColor.withOpacity(0.05),
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Order ${order['id']}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black87,
+                      // Icon Container
+                      Hero(
+                        tag: 'order_icon_${order['id']}',
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                orderColor.withOpacity(0.15),
+                                orderColor.withOpacity(0.25),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: orderColor.withOpacity(0.25),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
                               ),
-                            ),
+                            ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: (order['color']! as Color).withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              order['status']! as String,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: order['color']! as Color,
-                              ),
-                            ),
+                          child: Icon(
+                            order['icon']! as IconData,
+                            color: orderColor,
+                            size: 28,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        order['eta']! as String,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: WastecColors.primaryGreen,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        order['lastUpdate']! as String,
-                        style: const TextStyle(fontSize: 12, color: Colors.black54),
+                      const SizedBox(width: 16),
+                      // Order Info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Order ${order['id']}",
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.black87,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 7,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        orderColor.withOpacity(0.15),
+                                        orderColor.withOpacity(0.25),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: orderColor.withOpacity(0.2),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    order['status']! as String,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: orderColor,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: WastecColors.primaryGreen.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(
+                                    Icons.schedule_rounded,
+                                    size: 14,
+                                    color: WastecColors.primaryGreen,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  order['eta']! as String,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: WastecColors.primaryGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Animated Arrow
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: orderColor.withOpacity(_isExpanded ? 0.15 : 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: RotationTransition(
+                          turns: _rotationAnimation,
+                          child: Icon(
+                            Icons.expand_more_rounded,
+                            color: orderColor,
+                            size: 28,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _WastecInfoChip(
-                    icon: Icons.monitor_weight_outlined,
-                    label: order['weight']! as String,
-                  ),
+              ),
+              // Animated Content
+              ClipRect(
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOut,
+                  child: _isExpanded
+                      ? Column(
+                          children: [
+                            // Divider
+                            Container(
+                              height: 2,
+                              margin: const EdgeInsets.symmetric(horizontal: 18),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    orderColor.withOpacity(0.5),
+                                    orderColor.withOpacity(0.7),
+                                    orderColor.withOpacity(0.5),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.update_rounded,
+                                        size: 14,
+                                        color: Colors.black45,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        order['lastUpdate']! as String,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black54,
+                                          fontStyle: FontStyle.italic,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _WastecInfoChip(
+                                          icon: Icons.monitor_weight_outlined,
+                                          label: order['weight']! as String,
+                                          color: orderColor,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _WastecInfoChip(
+                                          icon: Icons.payments_outlined,
+                                          label: order['payment']! as String,
+                                          color: orderColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 18),
+                                  _WastecRouteStops(
+                                    pickup: order['pickup']! as String,
+                                    drop: order['drop']! as String,
+                                    notes: order['notes']! as String,
+                                    color: orderColor,
+                                  ),
+                                  const SizedBox(height: 18),
+                                  _WastecDriverCard(
+                                    name: order['agent']! as String,
+                                    vehicle: order['vehicle']! as String,
+                                    contact: order['contact']! as String,
+                                    color: orderColor,
+                                  ),
+                                  const SizedBox(height: 18),
+                                  WastecDeliveryProgress(
+                                    stage: order['stage']! as int,
+                                    color: orderColor,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  WastecOrderTimeline(
+                                    currentStage: order['stage']! as int,
+                                    timeline: order['timeline']! as List<String?>,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _WastecInfoChip(
-                    icon: Icons.payments_outlined,
-                    label: order['payment']! as String,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _WastecRouteStops(
-              pickup: order['pickup']! as String,
-              drop: order['drop']! as String,
-              notes: order['notes']! as String,
-            ),
-            const SizedBox(height: 18),
-            _WastecDriverCard(
-              name: order['agent']! as String,
-              vehicle: order['vehicle']! as String,
-              contact: order['contact']! as String,
-            ),
-            const SizedBox(height: 18),
-            WastecDeliveryProgress(stage: order['stage']! as int),
-            const SizedBox(height: 20),
-            WastecOrderTimeline(
-              currentStage: order['stage']! as int,
-              timeline: order['timeline']! as List<String?>,
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class WastecOrderTimeline extends StatelessWidget {
@@ -411,28 +607,45 @@ class WastecTimelineNode extends StatelessWidget {
 }
 
 class _WastecInfoChip extends StatelessWidget {
-  const _WastecInfoChip({required this.icon, required this.label});
+  const _WastecInfoChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   final IconData icon;
   final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: WastecColors.lightGreen.withOpacity(0.22),
-          borderRadius: BorderRadius.circular(14),
+          gradient: LinearGradient(
+            colors: [
+              color.withOpacity(0.15),
+              color.withOpacity(0.25),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: WastecColors.primaryGreen),
+            Icon(icon, size: 20, color: color),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 label,
                 style: const TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black87,
                 ),
               ),
@@ -443,24 +656,30 @@ class _WastecInfoChip extends StatelessWidget {
 }
 
 class _WastecRouteStops extends StatelessWidget {
-  const _WastecRouteStops({required this.pickup, required this.drop, required this.notes});
+  const _WastecRouteStops({
+    required this.pickup,
+    required this.drop,
+    required this.notes,
+    required this.color,
+  });
 
   final String pickup;
   final String drop;
   final String notes;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: WastecColors.primaryGreen.withOpacity(0.25)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withOpacity(0.3), width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: color.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -471,33 +690,41 @@ class _WastecRouteStops extends StatelessWidget {
               title: 'Pickup',
               detail: pickup,
               icon: Icons.store_mall_directory_outlined,
-              accent: WastecColors.primaryGreen,
+              accent: color,
             ),
-            const _WastecRouteDivider(),
+            _WastecRouteDivider(color: color),
             _WastecRoutePoint(
               title: 'Drop-off',
               detail: drop,
               icon: Icons.location_city_outlined,
               accent: Colors.deepOrangeAccent,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: WastecColors.primaryGreen.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      colors: [
+                        color.withOpacity(0.15),
+                        color.withOpacity(0.25),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.sticky_note_2_outlined,
-                      size: 16, color: WastecColors.primaryGreen),
+                  child: Icon(
+                    Icons.sticky_note_2_outlined,
+                    size: 18,
+                    color: color,
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     notes,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -566,27 +793,44 @@ class _WastecRoutePoint extends StatelessWidget {
 }
 
 class _WastecRouteDivider extends StatelessWidget {
-  const _WastecRouteDivider();
+  const _WastecRouteDivider({required this.color});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(
           children: [
             Container(
               margin: const EdgeInsets.only(left: 17),
-              width: 2,
-              height: 28,
+              width: 3,
+              height: 32,
               decoration: BoxDecoration(
-                color: WastecColors.primaryGreen.withOpacity(0.3),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    color.withOpacity(0.5),
+                    color.withOpacity(0.2),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(width: 26),
             Expanded(
               child: Container(
-                height: 1,
-                color: Colors.black12,
+                height: 1.5,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      color.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -595,18 +839,25 @@ class _WastecRouteDivider extends StatelessWidget {
 }
 
 class _WastecDriverCard extends StatelessWidget {
-  const _WastecDriverCard({required this.name, required this.vehicle, required this.contact});
+  const _WastecDriverCard({
+    required this.name,
+    required this.vehicle,
+    required this.contact,
+    required this.color,
+  });
 
   final String name;
   final String vehicle;
   final String contact;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: WastecColors.primaryGreen.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,14 +865,26 @@ class _WastecDriverCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: WastecColors.primaryGreen.withOpacity(0.4)),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white,
+                        color.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: color.withOpacity(0.5), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.delivery_dining, color: WastecColors.primaryGreen),
+                  child: Icon(Icons.delivery_dining, color: color, size: 26),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -665,11 +928,14 @@ class _WastecDriverCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.call, size: 18),
-                    label: const Text('Call Driver'),
+                    label: const Text('Call'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: WastecColors.primaryGreen,
-                      side: const BorderSide(color: WastecColors.primaryGreen),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      foregroundColor: color,
+                      side: BorderSide(color: color, width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -680,11 +946,13 @@ class _WastecDriverCard extends StatelessWidget {
                     icon: const Icon(Icons.chat_bubble_outline, size: 18),
                     label: const Text('Message'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: WastecColors.primaryGreen,
+                      backgroundColor: color,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      elevation: 4,
+                      shadowColor: color.withOpacity(0.4),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
@@ -697,9 +965,10 @@ class _WastecDriverCard extends StatelessWidget {
 }
 
 class WastecDeliveryProgress extends StatelessWidget {
-  const WastecDeliveryProgress({required this.stage, super.key});
+  const WastecDeliveryProgress({required this.stage, required this.color, super.key});
 
   final int stage;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -708,50 +977,101 @@ class WastecDeliveryProgress extends StatelessWidget {
     final progress = completedSteps / WastecOrderTimeline.stageCount;
     final currentStage = WastecOrderTimeline.stageAt(safeStage).label;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Journey Progress',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withOpacity(0.25), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Journey Progress',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            Text(
-              '$completedSteps of ${WastecOrderTimeline.stageCount} stages',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black54,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$completedSteps of ${WastecOrderTimeline.stageCount}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: LinearProgressIndicator(
-            minHeight: 8,
-            value: progress,
-            backgroundColor: WastecColors.lightGreen.withOpacity(0.3),
-            valueColor: const AlwaysStoppedAnimation<Color>(WastecColors.primaryGreen),
+            ],
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Current milestone: $currentStage',
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.black54,
+          const SizedBox(height: 12),
+          Stack(
+            children: [
+              Container(
+                height: 10,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              FractionallySizedBox(
+                widthFactor: progress,
+                child: Container(
+                  height: 10,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        color,
+                        color.withOpacity(0.7),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_rounded,
+                size: 16,
+                color: color,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Current: $currentStage',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

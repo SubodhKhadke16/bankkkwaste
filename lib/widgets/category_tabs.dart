@@ -11,12 +11,12 @@ class CategoryTabs extends StatelessWidget {
   const CategoryTabs({super.key});
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
+  Widget build(BuildContext context) => const SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      physics: BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 4),
       child: Row(
-        children: const [
+        children: [
           _CategoryTabTile(config: _CategoryTabConfig.wastecBank),
           _CategoryTabTile(config: _CategoryTabConfig.trendingRates),
           _CategoryTabTile(config: _CategoryTabConfig.scrapCategories),
