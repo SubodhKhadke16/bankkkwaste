@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 import '../../services/auth_service.dart';
 import '../home_clean.dart';
-import 'login_screen.dart';
 
-/// AuthGate checks if user is logged in and shows appropriate screen
+/// AuthGate shows home screen (guest or logged-in)
 class AuthGate extends StatefulWidget {
   const AuthGate({Key? key}) : super(key: key);
 
@@ -14,33 +14,33 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   final AuthService _authService = AuthService();
-  bool _isLoading = true;
-  bool _isLoggedIn = false;
+  late final fb_auth.FirebaseAuth _firebaseAuth;
 
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
-  }
-
-  Future<void> _checkAuthStatus() async {
-    final isLoggedIn = await _authService.isLoggedIn();
-    setState(() {
-      _isLoggedIn = isLoggedIn;
-      _isLoading = false;
-    });
+    _firebaseAuth = fb_auth.FirebaseAuth.instance;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
+    return StreamBuilder<fb_auth.User?>(
+      stream: _firebaseAuth.authStateChanges(),
+      builder: (context, snapshot) {
+        // While waiting for Firebase to initialize, show loading
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
-    return _isLoggedIn ? const HomeScreen() : const LoginScreen();
+        // Always show home screen (whether user is logged in or guest)
+        // isLoggedIn parameter tells HomeScreen if user is authenticated
+        final isLoggedIn = snapshot.hasData && snapshot.data != null;
+        return HomeScreen(isLoggedIn: isLoggedIn);
+      },
+    );
   }
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../screens/profile_screen.dart';
+import '../screens/auth/login_screen.dart';
 
 class ProfileWalletActions extends StatelessWidget {
-  const ProfileWalletActions({super.key, this.iconColor = Colors.white});
+  const ProfileWalletActions({super.key, this.iconColor = Colors.white, this.isLoggedIn = false});
 
   final Color iconColor;
+  final bool isLoggedIn;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -21,14 +23,22 @@ class ProfileWalletActions extends StatelessWidget {
               child: IconButton(
                 padding: EdgeInsets.zero,
                 icon: Icon(
-                  Icons.person_outline,
+                  isLoggedIn ? Icons.person_outline : Icons.login,
                   color: iconColor,
                   size: 24,
                 ),
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  );
+                  if (isLoggedIn) {
+                    // Navigate to profile screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                    );
+                  } else {
+                    // Navigate to login screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  }
                 },
               ),
             ),

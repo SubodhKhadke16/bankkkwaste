@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../models/user.dart';
 
 class AuthService {
@@ -37,7 +39,27 @@ class AuthService {
         password: '',
         createdAt: DateTime.now(),
       ));
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuth error: $e');
+      return AuthResult.error('Registration failed: ${e.message}');
     } catch (e) {
+      print('Registration error: $e');
+      // Even if there's an error, if it's a Pigeon type casting error but auth succeeded,
+      // we should return success since the user is authenticated
+      if (e.toString().contains('PigeonUserDetails') || e.toString().contains('List<Object?>')) {
+        print('Pigeon type casting error ignored - registration may have succeeded');
+        // Check if user is actually authenticated despite the error
+        if (_auth.currentUser != null) {
+          return AuthResult.success(User(
+            id: _auth.currentUser!.uid,
+            name: name,
+            email: email,
+            phone: phone,
+            password: '',
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
       return AuthResult.error('Registration failed: ${e.toString()}');
     }
   }
@@ -56,32 +78,39 @@ class AuthService {
       if (user == null) {
         return AuthResult.error('Login failed: No user returned');
       }
-      // Fetch user profile from Firestore
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      if (!doc.exists) {
-        return AuthResult.error('User profile not found');
-      }
-      final data = doc.data();
-      if (data == null) {
-        return AuthResult.error('User data is null');
-      }
       
-      // Safely extract data with type checking
-      String getName(dynamic value) {
-        if (value is String) return value;
-        if (value is List) return value.isNotEmpty ? value.first.toString() : '';
-        return value?.toString() ?? '';
-      }
-      
+      // Return user with basic info on login - DO NOT fetch from Firestore here
+      // This avoids the Pigeon type casting error with cloud_firestore
+      // Profile data will be fetched later when needed via getCurrentUser()
       return AuthResult.success(User(
         id: user.uid,
-        name: getName(data['name']),
-        email: getName(data['email']),
-        phone: getName(data['phone']),
+        name: email.split('@')[0],
+        email: email,
+        phone: '',
         password: '',
         createdAt: DateTime.now(),
       ));
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuth error: $e');
+      return AuthResult.error('Login failed: ${e.message}');
     } catch (e) {
+      print('Login error: $e');
+      // Even if there's an error, if it's a Pigeon type casting error but auth succeeded,
+      // we should return success since the user is authenticated
+      if (e.toString().contains('PigeonUserDetails') || e.toString().contains('List<Object?>')) {
+        print('Pigeon type casting error ignored - auth may have succeeded');
+        // Check if user is actually authenticated despite the error
+        if (_auth.currentUser != null) {
+          return AuthResult.success(User(
+            id: _auth.currentUser!.uid,
+            name: email.split('@')[0],
+            email: email,
+            phone: '',
+            password: '',
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
       return AuthResult.error('Login failed: ${e.toString()}');
     }
   }
@@ -93,20 +122,69 @@ class AuthService {
 
   // Get current logged-in user
   Future<User?> getCurrentUser() async {
-    final user = _auth.currentUser;
-    if (user == null) return null;
-    final doc = await _firestore.collection('users').doc(user.uid).get();
-    if (!doc.exists) return null;
-    final data = doc.data();
-    if (data == null) return null;
-    return User(
-      id: user.uid,
-      name: data['name']?.toString() ?? '',
-      email: data['email']?.toString() ?? '',
-      phone: data['phone']?.toString() ?? '',
-      password: '',
-      createdAt: DateTime.now(),
-    );
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return null;
+      
+      try {
+        // Safely extract data with type checking helper
+        String safeExtractString(dynamic value) {
+          if (value is String) return value;
+          if (value is List && value.isNotEmpty) {
+            return value.first.toString();
+          }
+          return value?.toString() ?? '';
+        }
+        
+        final doc = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get()
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw TimeoutException('Failed to fetch user data: Operation timed out');
+              },
+            );
+        
+        if (!doc.exists) {
+          return User(
+            id: user.uid,
+            name: user.displayName ?? '',
+            email: user.email ?? '',
+            phone: '',
+            password: '',
+            createdAt: DateTime.now(),
+          );
+        }
+        
+        final data = doc.data() as Map<String, dynamic>?;
+        if (data == null) return null;
+        
+        return User(
+          id: user.uid,
+          name: safeExtractString(data['name']),
+          email: safeExtractString(data['email']),
+          phone: safeExtractString(data['phone']),
+          password: '',
+          createdAt: DateTime.now(),
+        );
+      } catch (e) {
+        print('Firestore fetch error in getCurrentUser: $e');
+        // Return user with auth data if Firestore fails
+        return User(
+          id: user.uid,
+          name: user.displayName ?? '',
+          email: user.email ?? '',
+          phone: '',
+          password: '',
+          createdAt: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      print('Error fetching current user: $e');
+      return null;
+    }
   }
 
   // Check if user is logged in
@@ -130,13 +208,23 @@ class AuthService {
   // Developer/Admin method: Get all registered users from Firestore
   Future<List<User>> getAllUsers() async {
     final snapshot = await _firestore.collection('users').get();
+    
+    // Safely extract data with type checking
+    String safeExtractString(dynamic value) {
+      if (value is String) return value;
+      if (value is List && value.isNotEmpty) {
+        return value.first.toString();
+      }
+      return value?.toString() ?? '';
+    }
+    
     return snapshot.docs.map((doc) {
       final data = doc.data();
       return User(
         id: doc.id,
-        name: data['name']?.toString() ?? '',
-        email: data['email']?.toString() ?? '',
-        phone: data['phone']?.toString() ?? '',
+        name: safeExtractString(data['name']),
+        email: safeExtractString(data['email']),
+        phone: safeExtractString(data['phone']),
         password: '',
         createdAt: DateTime.now(),
       );
