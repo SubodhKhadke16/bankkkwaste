@@ -271,6 +271,7 @@ class EcoFriendlyPage extends StatelessWidget {
                 children: [
                   Container(
                     height: 120,
+                    width: double.infinity,
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: const BorderRadius.only(
@@ -278,25 +279,12 @@ class EcoFriendlyPage extends StatelessWidget {
                         topRight: Radius.circular(18),
                       ),
                     ),
-                    alignment: Alignment.center,
-                    child: product.imagePath != null
-                        ? ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(18),
-                              topRight: Radius.circular(18),
-                            ),
-                            child: Image.asset(
-                              product.imagePath!,
-                              height: 120,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Icon(
-                            product.icon,
-                            color: Colors.green.shade700,
-                            size: 48,
-                          ),
+                    child: Image.asset(
+                      product.imagePath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
                   ),
                   Expanded(
                     child: Padding(
@@ -414,20 +402,10 @@ class ProductDetailPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: Colors.green.withOpacity(0.2)),
                 ),
-                clipBehavior: Clip.antiAlias,
-                alignment: Alignment.center,
-                child: product.imagePath != null
-                    ? Image.asset(
-                        product.imagePath!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : Icon(
-                        product.icon,
-                        size: 72,
-                        color: Colors.green.shade700,
-                      ),
+                child: Image.asset(
+                  product.imagePath,
+                  fit: BoxFit.cover,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -493,12 +471,12 @@ class _EcoProduct {
     required this.tag,
     required this.price,
     required this.icon,
-    this.imagePath,
+    required this.imagePath,
   });
 
   final String name;
   final String tag;
   final int price;
   final IconData icon;
-  final String? imagePath;
+  final String imagePath;
 }

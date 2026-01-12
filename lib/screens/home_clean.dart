@@ -205,19 +205,25 @@ class _HomeTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _HeroBanner(
-              icon: Icons.eco,
-              title: 'Be Eco-Friendly',
-              subtitle: 'Turn your waste into wealth while saving the planet',
-              onTap: onNavigateToEcoFriendly,
-            ),
-            const SizedBox(height: 16),
-            _HeroBanner(
-              icon: Icons.recycling,
-              title: 'Waste Bank',
-              subtitle: 'Zero Garbage to Landfill',
-              onTap: onNavigateToWasteBank,
-            ),
+                  Row(
+                    children: [
+                      _PromoCard(
+                        title: 'WASTE BANK',
+                        subtitle: 'EARN & RECYCLE',
+                        icon: Icons.recycling,
+                        onTap: onNavigateToWasteBank,
+                      ),
+                      const SizedBox(width: 16),
+                      _PromoCard(
+                        title: 'ECO-FRIENDLY',
+                        subtitle: 'SUSTAINABLE LIVING',
+                        icon: Icons.eco,
+                        onTap: onNavigateToEcoFriendly,
+                      ),
+                    ],
+                  ),
+            const SizedBox(height: 24),
+            _ImpactSection(),
                 ],
               ),
             ),
@@ -249,7 +255,7 @@ class _HeroBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Ink(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -268,12 +274,12 @@ class _HeroBanner extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(icon, size: 48, color: Colors.white.withOpacity(0.9)),
+              Icon(icon, size: 56, color: Colors.white.withOpacity(0.9)),
               const SizedBox(height: 12),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
@@ -283,7 +289,7 @@ class _HeroBanner extends StatelessWidget {
                 subtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: Colors.white.withOpacity(0.95),
                 ),
@@ -315,7 +321,317 @@ class _HeroBanner extends StatelessWidget {
         ),
       ),
     );
+}
 
+class _ImpactSection extends StatelessWidget {
+  const _ImpactSection();
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Your Impact heading
+          const Text(
+            'Your Impact',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Every bag you send stops waste from hitting landfills.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.black.withOpacity(0.6),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // CO2 Savings Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'CO₂ Savings',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WastecColors.primaryGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.share, size: 16, color: Colors.brown),
+                          SizedBox(width: 6),
+                          Text(
+                            'Share',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.brown,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '0.00 kg',
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: WastecColors.primaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'CO₂ reduced by you',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildWhiteBadge('Less landfill'),
+                    _buildWhiteBadge('Cleaner air'),
+                    _buildWhiteBadge('Circular fashion'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Community Impact
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Wastec Community Impact',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Together, we have reduced:',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.eco,
+                      size: 32,
+                      color: WastecColors.primaryGreen,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '42.15 tonnes CO₂',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: WastecColors.primaryGreen,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  children: [
+                    _buildImpactPoint(
+                      icon: Icons.check_circle,
+                      text: 'Waste diverted from landfills',
+                    ),
+                    const SizedBox(height: 10),
+                    _buildImpactPoint(
+                      icon: Icons.check_circle,
+                      text: 'Materials sent for recycling',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+
+  Widget _buildBadge(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      );
+
+  Widget _buildWhiteBadge(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: WastecColors.primaryGreen.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: WastecColors.primaryGreen,
+          ),
+        ),
+      );
+
+  Widget _buildImpactPoint({
+    required IconData icon,
+    required String text,
+  }) =>
+      Row(
+        children: [
+          Icon(icon, size: 20, color: WastecColors.primaryGreen),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      );
+}
+
+class _PromoCard extends StatelessWidget {
+  const _PromoCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+        child: AspectRatio(
+          aspectRatio: 1.25,
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    WastecColors.primaryGreen,
+                    WastecColors.primaryGreen.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Stack(
+                children: [
+                  // Top left: Title and Subtitle
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withOpacity(0.85),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Bottom right: Icon
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Icon(
+                      icon,
+                      color: Colors.white.withOpacity(0.8),
+                      size: 48,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
 }
 
 // Top feature cards were removed from Home — moved to Wastec Bank screen.
