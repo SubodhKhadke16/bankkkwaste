@@ -51,7 +51,7 @@ class WastecBankScreen extends StatelessWidget {
                               'Top rate today: ${topRate['name']} at ${topRate['price']} · Updated live from trusted dealers.',
                         ),
                       const SizedBox(height: 12),
-                      _buildTrendingRates(),
+                      _buildTrendingRates(context),
 
                       const SizedBox(height: 32),
                     ],
@@ -128,7 +128,7 @@ class WastecBankScreen extends StatelessWidget {
       );
 
   // Section A: Trending Rates (Horizontal Scroll)
-  Widget _buildTrendingRates() {
+  Widget _buildTrendingRates(BuildContext context) {
     final rates = [
       {'name': 'Paper', 'price': '₹6/kg', 'icon': Icons.description, 'imagePath':'assets/images/papers.png'},
       {'name': 'Plastic', 'price': '₹2/kg', 'icon': Icons.recycling},
@@ -150,7 +150,7 @@ class WastecBankScreen extends StatelessWidget {
       children: rates.map((rate) => Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () {},
+            onTap: () => _onRateTap(context, rate),
             borderRadius: BorderRadius.circular(18),
             child: Ink(
               decoration: BoxDecoration(
@@ -235,6 +235,15 @@ class WastecBankScreen extends StatelessWidget {
             ),
           ),
         )).toList(),
+    );
+  }
+
+  void _onRateTap(BuildContext context, Map<String, dynamic> rate) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WasteRateDetailPage(rate: rate),
+      ),
     );
   }
 
@@ -1076,6 +1085,187 @@ class _DeliveryProgress extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Detail page for waste material rates
+class WasteRateDetailPage extends StatelessWidget {
+  const WasteRateDetailPage({required this.rate, super.key});
+
+  final Map<String, dynamic> rate;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = rate['name'] as String? ?? 'Unknown';
+    final price = rate['price'] as String? ?? 'N/A';
+    final imagePath = rate['imagePath'] as String?;
+    final icon = rate['icon'] as IconData? ?? Icons.info_outline;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(name),
+        backgroundColor: WastecColors.primaryGreen,
+        foregroundColor: Colors.white,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Display image or icon
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: WastecColors.lightGreen.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: WastecColors.primaryGreen.withOpacity(0.2),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: imagePath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.asset(
+                          imagePath,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      )
+                    : Icon(
+                        icon,
+                        size: 80,
+                        color: WastecColors.primaryGreen,
+                      ),
+              ),
+              const SizedBox(height: 24),
+
+              // Material name
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Current rate
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: WastecColors.primaryGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: WastecColors.primaryGreen.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Current Rate:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      price,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: WastecColors.primaryGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Information section
+              const Text(
+                'About this material',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.black12,
+                  ),
+                ),
+                child: Text(
+                  _getMaterialDescription(name),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Call to action
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Schedule pickup for $name'),
+                        backgroundColor: WastecColors.primaryGreen,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: WastecColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Schedule Pickup',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getMaterialDescription(String materialName) {
+    final descriptions = {
+      'Paper': 'Paper waste including newspapers, cardboard, and office paper. Clean and dry paper yields better rates.',
+      'Plastic': 'Recyclable plastic items including bottles, containers, and bags. Sorted plastic commands better prices.',
+      'Metal': 'Scrap metal including aluminum, copper, and steel. High-value recyclable material.',
+      'E-Waste': 'Electronic waste including old phones, computers, and appliances. Contains valuable materials.',
+      'Newspaper': 'Old newspapers and printed media. Highly recyclable material with consistent demand.',
+      'Hard Plastic': 'Hard plastic items like buckets, crates, and containers. Durable and recyclable.',
+      'AC (2 Ton)': 'Old air conditioning units for 2-ton capacity. Requires proper handling and contains valuable components.',
+      'Iron': 'Scrap iron and ferrous metal items. Essential material for the steel industry.',
+    };
+    return descriptions[materialName] ?? 'Waste material accepted by Wastec Bank for recycling and recovery. Contact us for more details.';
   }
 }
 

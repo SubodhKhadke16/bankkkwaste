@@ -39,7 +39,10 @@ class _AuthGateState extends State<AuthGate> {
         // Always show home screen (whether user is logged in or guest)
         // isLoggedIn parameter tells HomeScreen if user is authenticated
         final isLoggedIn = snapshot.hasData && snapshot.data != null;
-        return HomeScreen(isLoggedIn: isLoggedIn);
+        return HomeScreen(
+          key: ValueKey(isLoggedIn), // Force rebuild when auth state changes
+          isLoggedIn: isLoggedIn,
+        );
       },
     );
   }

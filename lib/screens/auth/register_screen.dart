@@ -121,27 +121,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
 
-      // Navigate to home
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
+      // Pop back to AuthGate so it can rebuild with isLoggedIn=true
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } else {
       // Check if it's the Pigeon type casting error - if so, still allow registration
       final errorMsg = result.errorMessage ?? '';
       if (errorMsg.contains('PigeonUserDetails') || errorMsg.contains('List<Object?>')) {
-        // Despite the Pigeon error, Firebase Auth succeeded, so proceed to home
-        print('Pigeon type casting error detected but Firebase Auth succeeded, proceeding to home');
+        // Despite the Pigeon error, Firebase Auth succeeded, so proceed
+        print('Pigeon type casting error detected but Firebase Auth succeeded, proceeding');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Registration successful!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (route) => false,
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         // Show error message for other errors
         ScaffoldMessenger.of(context).showSnackBar(
