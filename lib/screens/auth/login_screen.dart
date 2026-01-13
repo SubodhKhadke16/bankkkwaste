@@ -66,19 +66,15 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (result.isSuccess) {
-      // Navigate to home screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      // Pop back to AuthGate so it can rebuild with isLoggedIn=true
+      Navigator.of(context).pop();
     } else {
       // Check if it's the Pigeon type casting error - if so, still allow login
       final errorMsg = result.errorMessage ?? '';
       if (errorMsg.contains('PigeonUserDetails') || errorMsg.contains('List<Object?>')) {
-        // Despite the Pigeon error, Firebase Auth succeeded, so proceed to home
-        print('Pigeon type casting error detected but Firebase Auth succeeded, proceeding to home');
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+        // Despite the Pigeon error, Firebase Auth succeeded, so proceed
+        print('Pigeon type casting error detected but Firebase Auth succeeded, proceeding');
+        Navigator.of(context).pop();
       } else {
         // Show error message for other errors
         ScaffoldMessenger.of(context).showSnackBar(
