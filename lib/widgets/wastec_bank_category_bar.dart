@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
-import '../screens/track_order_screen.dart';
+import '../screens/track_order_unified.dart';
 import '../screens/trending_rates_screen.dart';
 import '../screens/wallet_screen.dart';
 
@@ -21,7 +21,7 @@ class WastecBankCategoryBar extends StatelessWidget {
       icon: Icons.local_shipping,
       background: const Color(0xFFDFF4FF),
       badgeColor: const Color(0xFFBEE6FF),
-      destinationBuilder: (_) => const TrackOrderScreen(),
+      destinationBuilder: (_) => const TrackOrderUnifiedScreen(initialTab: 0),
     ),
     _WastecCategory(
       label: 'Wallet',

@@ -2,9 +2,7 @@
 
 import '../config/theme.dart';
 import '../data/wastec_bank_data.dart';
-import '../widgets/location_header.dart';
 import '../widgets/quick_access_row.dart';
-import 'eco_friendly_page.dart';
 
 class WastecBankScreen extends StatelessWidget {
   const WastecBankScreen({Key? key, this.onNavigateToEcoFriendly}) : super(key: key);

@@ -12,8 +12,7 @@ class User {
   });
 
   // Create User from Map
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
+  factory User.fromMap(Map<String, dynamic> map) => User(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       email: map['email'] ?? '',
@@ -21,7 +20,6 @@ class User {
       password: map['password'] ?? '',
       createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
     );
-  }
 
   // Create User from JSON string
   factory User.fromJson(String source) => User.fromMap(json.decode(source));

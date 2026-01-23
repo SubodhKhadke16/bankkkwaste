@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../config/theme.dart';
-import '../../services/auth_service.dart';
 import '../../models/user.dart';
+import '../../services/auth_service.dart';
 
 class DeveloperScreen extends StatefulWidget {
   const DeveloperScreen({Key? key}) : super(key: key);
@@ -158,7 +159,7 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
                       ),
                     )
                   else
-                    ..._users.map((user) => _buildUserCard(user)).toList(),
+                    ..._users.map(_buildUserCard),
                 ],
               ),
             ),

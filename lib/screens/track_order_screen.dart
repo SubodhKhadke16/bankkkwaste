@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../data/wastec_bank_data.dart';
 import '../widgets/profile_wallet_actions.dart';
-import '../widgets/wallet_tab.dart';
 import '../widgets/wastec_order_card.dart';
 import 'home_clean.dart';
 

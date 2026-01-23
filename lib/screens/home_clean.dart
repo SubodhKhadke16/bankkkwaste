@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../widgets/cart_icon.dart';
+import '../widgets/location_header.dart';
+import '../widgets/products_section.dart';
 import '../widgets/profile_wallet_actions.dart';
 import '../widgets/wallet_tab.dart';
-import '../widgets/location_header.dart';
 import 'eco_friendly_page.dart';
+import 'track_order_unified.dart';
 import 'wastec_bank_screen.dart';
-import 'track_order_screen.dart';
-import 'track_order_eco_screen.dart';
 // feature screens removed from Home; kept in Wastec Bank screen
 
 /// Home screen with bottom navigation
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key, this.initialIndex = 0, this.isLoggedIn = false}) : super(key: key);
+  const HomeScreen({Key? key, this.initialIndex = 0, this.isLoggedIn = false})
+      : super(key: key);
 
   final int initialIndex;
   final bool isLoggedIn;
@@ -32,11 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      backgroundColor: WastecColors.white,
-      appBar: _buildAppBar(),
-      body: _getBody(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
+        backgroundColor: WastecColors.white,
+        appBar: _buildAppBar(),
+        body: _getBody(),
+        bottomNavigationBar: _buildBottomNavigationBar(),
+      );
 
   Widget _getBody() {
     switch (_currentIndex) {
@@ -70,10 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         backgroundColor: WastecColors.primaryGreen,
         title: const LocationHeader(),
-        actions: [ProfileWalletActions(isLoggedIn: widget.isLoggedIn)],
+        actions: [
+          const CartIcon(),
+          ProfileWalletActions(isLoggedIn: widget.isLoggedIn),
+        ],
       );
     }
-    
+
     // For Wallet (3), show regular title
     final titles = ['Wastec Bank', 'Be Eco-Friendly', 'Waste Bank', 'Wallet'];
     return AppBar(
@@ -87,7 +92,10 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white,
         ),
       ),
-      actions: [ProfileWalletActions(isLoggedIn: widget.isLoggedIn)],
+      actions: [
+        const CartIcon(),
+        ProfileWalletActions(isLoggedIn: widget.isLoggedIn),
+      ],
     );
   }
 
@@ -102,11 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
           if (i == 0) {
             setState(() => _currentIndex = 0); // Home
           } else if (i == 1) {
-            setState(() => _currentIndex = 1); // Eco-Friendly (stays on this tab)
+            setState(
+                () => _currentIndex = 1); // Eco-Friendly (stays on this tab)
           } else if (i == 2) {
             Navigator.of(context).push(
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const TrackOrderEcoScreen(),
+                pageBuilder: (_, __, ___) =>
+                    const TrackOrderUnifiedScreen(initialTab: 1),
                 transitionDuration: Duration.zero,
               ),
             );
@@ -122,8 +132,11 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.eco), label: 'Eco-Friendly'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              label: 'Wallet'),
         ],
       );
     }
@@ -142,7 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
           } else if (i == 2) {
             Navigator.of(context).push(
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const TrackOrderScreen(),
+                pageBuilder: (_, __, ___) =>
+                    const TrackOrderUnifiedScreen(initialTab: 0),
                 transitionDuration: Duration.zero,
               ),
             );
@@ -157,9 +171,13 @@ class _HomeScreenState extends State<HomeScreen> {
             activeIcon: Icon(Icons.home_filled),
             label: 'Home',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.recycling), label: 'Waste Bank'),
-          BottomNavigationBarItem(icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.recycling), label: 'Waste Bank'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet_outlined),
+              label: 'Wallet'),
         ],
       );
     }
@@ -178,9 +196,12 @@ class _HomeScreenState extends State<HomeScreen> {
           activeIcon: Icon(Icons.home_filled),
           label: 'Home',
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.eco), label: 'Be Eco-Friendly'),
-        BottomNavigationBarItem(icon: Icon(Icons.recycling), label: 'Waste Bank'),
-        BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.eco), label: 'Be Eco-Friendly'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.recycling), label: 'Waste Bank'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
       ],
     );
   }
@@ -198,130 +219,41 @@ class _HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _PromoCard(
-                        title: 'WASTE BANK',
-                        subtitle: 'EARN & RECYCLE',
-                        icon: Icons.recycling,
-                        onTap: onNavigateToWasteBank,
-                      ),
-                      const SizedBox(width: 16),
-                      _PromoCard(
-                        title: 'ECO-FRIENDLY',
-                        subtitle: 'SUSTAINABLE LIVING',
-                        icon: Icons.eco,
-                        onTap: onNavigateToEcoFriendly,
-                      ),
-                    ],
-                  ),
-            const SizedBox(height: 24),
-            _ImpactSection(),
-                ],
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _PromoCard(
+                          title: 'WASTE BANK',
+                          subtitle: 'EARN & RECYCLE',
+                          icon: Icons.recycling,
+                          onTap: onNavigateToWasteBank,
+                        ),
+                        const SizedBox(width: 16),
+                        _PromoCard(
+                          title: 'ECO-FRIENDLY',
+                          subtitle: 'SUSTAINABLE LIVING',
+                          icon: Icons.eco,
+                          onTap: onNavigateToEcoFriendly,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const _ImpactSection(),
+                    const ProductsSection(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-}
-
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                WastecColors.primaryGreen,
-                WastecColors.primaryGreen.withOpacity(0.8),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: WastecColors.primaryGreen.withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 56, color: Colors.white.withOpacity(0.9)),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white.withOpacity(0.95),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: onTap,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: WastecColors.primaryGreen,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: const Text(
-                  'Open Now',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
-      ),
-    );
+      );
 }
 
 class _ImpactSection extends StatelessWidget {
@@ -443,9 +375,9 @@ class _ImpactSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -502,22 +434,6 @@ class _ImpactSection extends StatelessWidget {
             ),
           ),
         ],
-      );
-
-  Widget _buildBadge(String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
       );
 
   Widget _buildWhiteBadge(String text) => Container(
@@ -636,4 +552,3 @@ class _PromoCard extends StatelessWidget {
 }
 
 // Top feature cards were removed from Home — moved to Wastec Bank screen.
-

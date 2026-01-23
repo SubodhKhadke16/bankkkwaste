@@ -121,30 +121,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
 
-      // Pop back to AuthGate so it can rebuild with isLoggedIn=true
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Navigate to home screen and remove all previous routes
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(isLoggedIn: true),
+        ),
+        (route) => false,
+      );
     } else {
-      // Check if it's the Pigeon type casting error - if so, still allow registration
-      final errorMsg = result.errorMessage ?? '';
-      if (errorMsg.contains('PigeonUserDetails') || errorMsg.contains('List<Object?>')) {
-        // Despite the Pigeon error, Firebase Auth succeeded, so proceed
-        print('Pigeon type casting error detected but Firebase Auth succeeded, proceeding');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      } else {
-        // Show error message for other errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.errorMessage ?? 'Registration failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -154,7 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: WastecColors.darkGray),
+        iconTheme: const IconThemeData(color: WastecColors.darkGray),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -167,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 
                 // Title
-                Text(
+                const Text(
                   'Create Account',
                   style: TextStyle(
                     fontSize: 28,
@@ -192,7 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Full Name',
                     hintText: 'Enter your full name',
-                    prefixIcon: Icon(Icons.person_outline, color: WastecColors.primaryGreen),
+                    prefixIcon: const Icon(Icons.person_outline, color: WastecColors.primaryGreen),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -202,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                      borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                     ),
                   ),
                 ),
@@ -216,7 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
-                    prefixIcon: Icon(Icons.email_outlined, color: WastecColors.primaryGreen),
+                    prefixIcon: const Icon(Icons.email_outlined, color: WastecColors.primaryGreen),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -226,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                      borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                     ),
                   ),
                 ),
@@ -240,7 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
                     hintText: 'Enter your phone number',
-                    prefixIcon: Icon(Icons.phone_outlined, color: WastecColors.primaryGreen),
+                    prefixIcon: const Icon(Icons.phone_outlined, color: WastecColors.primaryGreen),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -250,7 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                      borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                     ),
                   ),
                 ),
@@ -264,7 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Create a password',
-                    prefixIcon: Icon(Icons.lock_outline, color: WastecColors.primaryGreen),
+                    prefixIcon: const Icon(Icons.lock_outline, color: WastecColors.primaryGreen),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -281,7 +272,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                      borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                     ),
                   ),
                 ),
@@ -295,7 +286,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     hintText: 'Re-enter your password',
-                    prefixIcon: Icon(Icons.lock_outline, color: WastecColors.primaryGreen),
+                    prefixIcon: const Icon(Icons.lock_outline, color: WastecColors.primaryGreen),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
@@ -312,7 +303,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                      borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                     ),
                   ),
                 ),
@@ -332,8 +323,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: RichText(
                           text: TextSpan(
                             style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                            children: [
-                              const TextSpan(text: 'I agree to the '),
+                            children: const [
+                              TextSpan(text: 'I agree to the '),
                               TextSpan(
                                 text: 'Terms and Conditions',
                                 style: TextStyle(
@@ -341,7 +332,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const TextSpan(text: ' and '),
+                              TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Privacy Policy',
                                 style: TextStyle(
@@ -401,7 +392,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(
+                      child: const Text(
                         'Sign In',
                         style: TextStyle(
                           color: WastecColors.primaryGreen,

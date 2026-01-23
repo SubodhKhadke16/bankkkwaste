@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 import '../../services/auth_service.dart';
 import '../home_clean.dart';
+import 'login_screen.dart';
 
-/// AuthGate shows home screen (guest or logged-in)
+/// AuthGate checks login state and shows appropriate screen
 class AuthGate extends StatefulWidget {
   const AuthGate({Key? key}) : super(key: key);
 
@@ -14,36 +14,39 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   final AuthService _authService = AuthService();
-  late final fb_auth.FirebaseAuth _firebaseAuth;
+  bool _isLoggedIn = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _firebaseAuth = fb_auth.FirebaseAuth.instance;
+    _checkLoginState();
+  }
+
+  Future<void> _checkLoginState() async {
+    final loggedIn = await _authService.isLoggedIn();
+    setState(() {
+      _isLoggedIn = loggedIn;
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<fb_auth.User?>(
-      stream: _firebaseAuth.authStateChanges(),
-      builder: (context, snapshot) {
-        // While waiting for Firebase to initialize, show loading
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-        // Always show home screen (whether user is logged in or guest)
-        // isLoggedIn parameter tells HomeScreen if user is authenticated
-        final isLoggedIn = snapshot.hasData && snapshot.data != null;
-        return HomeScreen(
-          key: ValueKey(isLoggedIn), // Force rebuild when auth state changes
-          isLoggedIn: isLoggedIn,
-        );
-      },
-    );
+    // Show home screen if logged in, otherwise show login screen
+    return _isLoggedIn
+        ? HomeScreen(
+            key: ValueKey(_isLoggedIn),
+            isLoggedIn: true,
+          )
+        : const LoginScreen();
   }
 }

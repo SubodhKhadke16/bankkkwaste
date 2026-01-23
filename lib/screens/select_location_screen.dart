@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../config/theme.dart';
 import '../models/saved_address.dart';
 import '../services/location_service.dart';
 import 'add_address_screen.dart';

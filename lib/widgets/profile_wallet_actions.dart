@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../screens/profile_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/profile_screen.dart';
 
 class ProfileWalletActions extends StatelessWidget {
   const ProfileWalletActions({super.key, this.iconColor = Colors.white, this.isLoggedIn = false});

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "561657138660",
+    "project_id": "wastech-app",
+    "storage_bucket": "wastech-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:561657138660:android:5091b6cbcf5431ccfdcbf1",
+        "android_client_info": {
+          "package_name": "com.example.wastec_bank_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "561657138660-59qktjv8ae0sjbd8kf0utjrb7j6sgcv6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.wastec_bank_app",
+            "certificate_hash": "f7bb4333cf34db1809992df2da66ddedb76d5930"
+          }
+        },
+        {
+          "client_id": "561657138660-sbrd4cng6csiv2vv8ptrhtld6hum9rqc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-PfXnyrM4pL9yfLH70thSAbl6rwISeLs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "561657138660-sbrd4cng6csiv2vv8ptrhtld6hum9rqc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
