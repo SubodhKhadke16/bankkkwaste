@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 /// Model representing a saved address
 class SavedAddress {
@@ -7,11 +6,8 @@ class SavedAddress {
     required this.id,
     required this.label,
     required this.addressLine1,
-    this.addressLine2 = '',
+    required this.city, required this.state, required this.pincode, this.addressLine2 = '',
     this.landmark = '',
-    required this.city,
-    required this.state,
-    required this.pincode,
     this.latitude,
     this.longitude,
     this.distanceKm,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
-import '../services/location_service.dart';
 import '../screens/select_location_screen.dart';
+import '../services/location_service.dart';
 
 /// Reusable location header widget similar to Zepto's delivery time banner
 class LocationHeader extends StatefulWidget {

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
-import 'register_screen.dart';
-import 'forgot_password_screen.dart';
 import '../home_clean.dart';
+import 'forgot_password_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -66,24 +67,21 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (result.isSuccess) {
-      // Pop back to AuthGate so it can rebuild with isLoggedIn=true
-      Navigator.of(context).pop();
+      // Navigate to home screen and remove all previous routes
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(isLoggedIn: true),
+        ),
+        (route) => false,
+      );
     } else {
-      // Check if it's the Pigeon type casting error - if so, still allow login
-      final errorMsg = result.errorMessage ?? '';
-      if (errorMsg.contains('PigeonUserDetails') || errorMsg.contains('List<Object?>')) {
-        // Despite the Pigeon error, Firebase Auth succeeded, so proceed
-        print('Pigeon type casting error detected but Firebase Auth succeeded, proceeding');
-        Navigator.of(context).pop();
-      } else {
-        // Show error message for other errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.errorMessage ?? 'Login failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -108,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: WastecColors.primaryGreen.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.eco,
                       size: 60,
                       color: WastecColors.primaryGreen,
@@ -117,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
 
                   // Title
-                  Text(
+                  const Text(
                     'Welcome Back!',
                     style: TextStyle(
                       fontSize: 28,
@@ -145,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined, color: WastecColors.primaryGreen),
+                      prefixIcon: const Icon(Icons.email_outlined, color: WastecColors.primaryGreen),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -155,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                        borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                       ),
                     ),
                   ),
@@ -169,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
-                      prefixIcon: Icon(Icons.lock_outline, color: WastecColors.primaryGreen),
+                      prefixIcon: const Icon(Icons.lock_outline, color: WastecColors.primaryGreen),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -186,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                        borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                       ),
                     ),
                   ),
@@ -213,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
                           );
                         },
-                        child: Text(
+                        child: const Text(
                           'Forgot Password?',
                           style: TextStyle(color: WastecColors.primaryGreen),
                         ),
@@ -307,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             MaterialPageRoute(builder: (_) => const RegisterScreen()),
                           );
                         },
-                        child: Text(
+                        child: const Text(
                           'Sign Up',
                           style: TextStyle(
                             color: WastecColors.primaryGreen,

@@ -99,8 +99,8 @@ class TrackOrderEcoScreen extends StatelessWidget {
               ),
             ),
             // Order history header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
                 'Order History',
                 style: TextStyle(
@@ -611,7 +611,7 @@ class TrackOrderEcoScreen extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.black87,

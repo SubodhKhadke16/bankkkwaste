@@ -67,7 +67,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: WastecColors.darkGray),
+        iconTheme: const IconThemeData(color: WastecColors.darkGray),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -98,7 +98,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 // Title
                 Text(
                   _emailSent ? 'Check Your Email' : 'Forgot Password?',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: WastecColors.darkGray,
@@ -130,7 +130,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined, color: WastecColors.primaryGreen),
+                      prefixIcon: const Icon(Icons.email_outlined, color: WastecColors.primaryGreen),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -140,7 +140,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: WastecColors.primaryGreen, width: 2),
+                        borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 2),
                       ),
                     ),
                   ),
@@ -209,7 +209,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     onPressed: () {
                       setState(() => _emailSent = false);
                     },
-                    child: Text(
+                    child: const Text(
                       'Didn\'t receive the email? Resend',
                       style: TextStyle(
                         color: WastecColors.primaryGreen,
@@ -231,7 +231,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text(
+                        child: const Text(
                           'Sign In',
                           style: TextStyle(
                             color: WastecColors.primaryGreen,

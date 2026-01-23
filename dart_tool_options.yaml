@@ -1,0 +1,3 @@
+# Disable native assets to work around spaces in Windows username path
+native-assets:
+  enabled: false

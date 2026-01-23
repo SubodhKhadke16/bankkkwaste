@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../config/theme.dart';
-import '../services/auth_service.dart';
 import '../models/user.dart';
+import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
 import 'dev/developer_screen.dart';
 
