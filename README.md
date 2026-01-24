@@ -174,3 +174,4 @@ For inquiries or support, contact the Wastec Bank development team.
 ---
 
 **Built with ❤️ and Flutter** 🚀
+$env:Path = "C:\flutter\bin;" + ($env:Path -replace [regex]::Escape("C:\Users\Vi and Ash\flutter\bin;"), ""); $env:PUB_CACHE="C:\PubCache"; cd C:\BankApp; flutter run -d ZD2225PZDW  

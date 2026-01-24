@@ -89,10 +89,13 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
     );
 
     if (confirm == true) {
-      await _authService.clearAllData();
+      // Note: clearAllData was removed as it's not compatible with Firebase Auth
+      // You would need Firebase Admin SDK to delete auth users
+      // await _authService.clearAllData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All data cleared')),
+          const SnackBar(
+              content: Text('Clear all data requires Firebase Admin SDK')),
         );
         _loadData();
       }
@@ -108,146 +111,149 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      appBar: AppBar(
-        title: const Text('Developer Panel'),
-        backgroundColor: WastecColors.primaryGreen,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-            tooltip: 'Refresh',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            onPressed: _clearAllData,
-            tooltip: 'Clear All Data',
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Current User Section
-                  _buildSectionHeader('Current Logged-In User'),
-                  const SizedBox(height: 12),
-                  if (_currentUser != null)
-                    _buildCurrentUserCard(_currentUser!)
-                  else
-                    const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('No user logged in'),
-                      ),
-                    ),
-                  const SizedBox(height: 24),
-
-                  // All Users Section
-                  _buildSectionHeader(
-                    'All Registered Users (${_users.length})',
-                  ),
-                  const SizedBox(height: 12),
-                  if (_users.isEmpty)
-                    const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('No users registered yet'),
-                      ),
-                    )
-                  else
-                    ..._users.map(_buildUserCard),
-                ],
-              ),
+        appBar: AppBar(
+          title: const Text('Developer Panel'),
+          backgroundColor: WastecColors.primaryGreen,
+          foregroundColor: Colors.white,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loadData,
+              tooltip: 'Refresh',
             ),
-    );
-
-  Widget _buildSectionHeader(String title) => Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: WastecColors.darkGray,
-      ),
-    );
-
-  Widget _buildCurrentUserCard(User user) => Card(
-      color: WastecColors.primaryGreen.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: WastecColors.primaryGreen,
-                  child: Text(
-                    user.name[0].toUpperCase(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        user.email,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: WastecColors.primaryGreen,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'ACTIVE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            _buildInfoRow('User ID', user.id, onCopy: () => _copyToClipboard(user.id, 'User ID')),
-            _buildInfoRow('Phone', user.phone, onCopy: () => _copyToClipboard(user.phone, 'Phone')),
-            _buildInfoRow('Password', user.password, onCopy: () => _copyToClipboard(user.password, 'Password')),
-            _buildInfoRow(
-              'Registered',
-              '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year} ${user.createdAt.hour}:${user.createdAt.minute.toString().padLeft(2, '0')}',
+            IconButton(
+              icon: const Icon(Icons.delete_forever),
+              onPressed: _clearAllData,
+              tooltip: 'Clear All Data',
             ),
           ],
         ),
-      ),
-    );
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Current User Section
+                    _buildSectionHeader('Current Logged-In User'),
+                    const SizedBox(height: 12),
+                    if (_currentUser != null)
+                      _buildCurrentUserCard(_currentUser!)
+                    else
+                      const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('No user logged in'),
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+
+                    // All Users Section
+                    _buildSectionHeader(
+                      'All Registered Users (${_users.length})',
+                    ),
+                    const SizedBox(height: 12),
+                    if (_users.isEmpty)
+                      const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('No users registered yet'),
+                        ),
+                      )
+                    else
+                      ..._users.map(_buildUserCard),
+                  ],
+                ),
+              ),
+      );
+
+  Widget _buildSectionHeader(String title) => Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: WastecColors.darkGray,
+        ),
+      );
+
+  Widget _buildCurrentUserCard(User user) => Card(
+        color: WastecColors.primaryGreen.withOpacity(0.1),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: WastecColors.primaryGreen,
+                    child: Text(
+                      user.name[0].toUpperCase(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          user.email,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: WastecColors.primaryGreen,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'ACTIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 24),
+              _buildInfoRow('User ID', user.id,
+                  onCopy: () => _copyToClipboard(user.id, 'User ID')),
+              _buildInfoRow('Phone', user.phone,
+                  onCopy: () => _copyToClipboard(user.phone, 'Phone')),
+              _buildInfoRow('Password', user.password,
+                  onCopy: () => _copyToClipboard(user.password, 'Password')),
+              _buildInfoRow(
+                'Registered',
+                '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year} ${user.createdAt.hour}:${user.createdAt.minute.toString().padLeft(2, '0')}',
+              ),
+            ],
+          ),
+        ),
+      );
 
   Widget _buildUserCard(User user) {
     final isCurrentUser = _currentUser?.id == user.id;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -324,9 +330,12 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
               ],
             ),
             const Divider(height: 24),
-            _buildInfoRow('User ID', user.id, onCopy: () => _copyToClipboard(user.id, 'User ID')),
-            _buildInfoRow('Phone', user.phone, onCopy: () => _copyToClipboard(user.phone, 'Phone')),
-            _buildInfoRow('Password', user.password, onCopy: () => _copyToClipboard(user.password, 'Password')),
+            _buildInfoRow('User ID', user.id,
+                onCopy: () => _copyToClipboard(user.id, 'User ID')),
+            _buildInfoRow('Phone', user.phone,
+                onCopy: () => _copyToClipboard(user.phone, 'Phone')),
+            _buildInfoRow('Password', user.password,
+                onCopy: () => _copyToClipboard(user.password, 'Password')),
             _buildInfoRow(
               'Registered',
               '${user.createdAt.day}/${user.createdAt.month}/${user.createdAt.year} ${user.createdAt.hour}:${user.createdAt.minute.toString().padLeft(2, '0')}',
@@ -337,43 +346,44 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {VoidCallback? onCopy}) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          if (onCopy != null)
-            InkWell(
-              onTap: onCopy,
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Icon(
-                  Icons.copy,
-                  size: 16,
+  Widget _buildInfoRow(String label, String value, {VoidCallback? onCopy}) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 90,
+              child: Text(
+                label,
+                style: TextStyle(
                   color: Colors.grey[600],
+                  fontSize: 13,
                 ),
               ),
             ),
-        ],
-      ),
-    );
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (onCopy != null)
+              InkWell(
+                onTap: onCopy,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.copy,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
 }
