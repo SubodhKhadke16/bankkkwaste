@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'config/theme.dart';
 import 'screens/auth/auth_gate.dart';
+import 'screens/cart_screen.dart';
 import 'services/cart_service.dart';
 import 'services/product_service.dart';
 
@@ -21,13 +23,26 @@ class WastecBankApp extends StatelessWidget {
   const WastecBankApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => CartService(),
-        child: MaterialApp(
-          title: 'Wastec Bank',
-          theme: WastecTheme.lightTheme,
-          home: const AuthGate(),
-          debugShowCheckedModeBanner: false,
-        ),
+  Widget build(BuildContext context) => StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          // Get current user ID (null if not logged in)
+          final userId = snapshot.data?.uid;
+
+          return ChangeNotifierProvider(
+            // Use key to force recreation of CartService when user changes
+            key: ValueKey(userId),
+            create: (_) => CartService(userId: userId),
+            child: MaterialApp(
+              title: 'Wastec Bank',
+              theme: WastecTheme.lightTheme,
+              home: const AuthGate(),
+              debugShowCheckedModeBanner: false,
+              routes: {
+                '/cart': (context) => const CartScreen(),
+              },
+            ),
+          );
+        },
       );
 }

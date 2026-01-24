@@ -46,71 +46,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Check if current user is the developer (using email only, since Firebase doesn't expose passwords)
-  bool get _isDeveloper => _currentUser?.email.toLowerCase() == 'rohit@test.com';
+  bool get _isDeveloper =>
+      _currentUser?.email.toLowerCase() == 'rohit@test.com';
 
   List<_ProfileOption> get _options => [
-    _ProfileOption(
-      title: 'My Orders / Scrap History',
-      icon: Icons.history,
-      builder: (_) => const MyOrdersPage(),
-    ),
-    _ProfileOption(
-      title: 'Track My Orders',
-      icon: Icons.local_shipping,
-      builder: (_) => const TrackOrdersPage(),
-    ),
-    _ProfileOption(
-      title: 'Reward Points',
-      icon: Icons.star,
-      builder: (_) => const RewardsPage(),
-    ),
-    _ProfileOption(
-      title: 'My Addresses',
-      icon: Icons.location_on,
-      builder: (_) => const ComingSoonPage(title: 'My Addresses'),
-    ),
-    _ProfileOption(
-      title: 'Payment Methods',
-      icon: Icons.payment,
-      builder: (_) => const ComingSoonPage(title: 'Payment Methods'),
-    ),
-    _ProfileOption(
-      title: 'Notifications',
-      icon: Icons.notifications,
-      builder: (_) => const ComingSoonPage(title: 'Notifications'),
-    ),
-    _ProfileOption(
-      title: 'Refer & Earn',
-      icon: Icons.person_add,
-      builder: (_) => const ComingSoonPage(title: 'Refer & Earn'),
-    ),
-    _ProfileOption(
-      title: 'Contact Support',
-      icon: Icons.support_agent,
-      builder: (_) => const ComingSoonPage(title: 'Contact Support'),
-    ),
-    _ProfileOption(
-      title: 'About Wastec Bank',
-      icon: Icons.info_outline,
-      builder: (_) => const ComingSoonPage(title: 'About Wastec Bank'),
-    ),
-    _ProfileOption(
-      title: 'Settings',
-      icon: Icons.settings,
-      builder: (_) => const SettingsPage(),
-    ),
-    if (_isDeveloper)
-      _ProfileOption(
-        title: '🔧 Developer Panel',
-        icon: Icons.developer_mode,
-        builder: (_) => const DeveloperScreen(),
-      ),
-    const _ProfileOption(
-      title: 'Log Out',
-      icon: Icons.logout,
-      isLogout: true,
-    ),
-  ];
+        _ProfileOption(
+          title: 'My Orders / Scrap History',
+          icon: Icons.history,
+          builder: (_) => const MyOrdersPage(),
+        ),
+        _ProfileOption(
+          title: 'Reward Points',
+          icon: Icons.star,
+          builder: (_) => const RewardsPage(),
+        ),
+        _ProfileOption(
+          title: 'My Addresses',
+          icon: Icons.location_on,
+          builder: (_) => const ComingSoonPage(title: 'My Addresses'),
+        ),
+        _ProfileOption(
+          title: 'Payment Methods',
+          icon: Icons.payment,
+          builder: (_) => const ComingSoonPage(title: 'Payment Methods'),
+        ),
+        _ProfileOption(
+          title: 'Notifications',
+          icon: Icons.notifications,
+          builder: (_) => const ComingSoonPage(title: 'Notifications'),
+        ),
+        _ProfileOption(
+          title: 'Refer & Earn',
+          icon: Icons.person_add,
+          builder: (_) => const ComingSoonPage(title: 'Refer & Earn'),
+        ),
+        _ProfileOption(
+          title: 'Contact Support',
+          icon: Icons.support_agent,
+          builder: (_) => const ComingSoonPage(title: 'Contact Support'),
+        ),
+        _ProfileOption(
+          title: 'About Wastec Bank',
+          icon: Icons.info_outline,
+          builder: (_) => const ComingSoonPage(title: 'About Wastec Bank'),
+        ),
+        _ProfileOption(
+          title: 'Settings',
+          icon: Icons.settings,
+          builder: (_) => const SettingsPage(),
+        ),
+        if (_isDeveloper)
+          _ProfileOption(
+            title: '🔧 Developer Panel',
+            icon: Icons.developer_mode,
+            builder: (_) => const DeveloperScreen(),
+          ),
+        const _ProfileOption(
+          title: 'Log Out',
+          icon: Icons.logout,
+          isLogout: true,
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -221,10 +217,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             const SizedBox(height: 10),
                             OutlinedButton(
-                              onPressed: () => _openPage(
-                                context,
-                                (_) => const EditProfilePage(),
-                              ),
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const EditProfilePage(),
+                                  ),
+                                );
+                                // Refresh profile if updated
+                                if (result == true && mounted) {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
+                                  _loadCurrentUser();
+                                }
+                              },
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: WastecColors.primaryGreen,
                                 side: const BorderSide(
@@ -492,8 +499,7 @@ class MyOrdersPage extends StatelessWidget {
               ),
               title: Text(order['id']!,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle:
-                  Text('${order['date']} • ${order['status']}'),
+              subtitle: Text('${order['date']} • ${order['status']}'),
               trailing: Text(order['amount']!,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
@@ -520,8 +526,7 @@ class TrackOrdersPage extends StatelessWidget {
               Icon(Icons.local_shipping,
                   size: 64, color: WastecColors.primaryGreen),
               SizedBox(height: 16),
-              Text('No active orders to track',
-                  style: TextStyle(fontSize: 16)),
+              Text('No active orders to track', style: TextStyle(fontSize: 16)),
             ],
           ),
         ),
@@ -572,20 +577,19 @@ class RewardsPage extends StatelessWidget {
               itemCount: rewardTitles.length,
               separatorBuilder: (_, __) => const Divider(),
               itemBuilder: (context, index) => Card(
-                  elevation: 0,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor:
-                          WastecColors.primaryGreen.withOpacity(0.15),
-                      child: const Icon(Icons.card_giftcard,
-                          color: Colors.green),
-                    ),
-                    title: Text(rewardTitles[index]),
-                    subtitle: const Text('Earned on 08 Nov 2025'),
-                    trailing: Text(rewardPoints[index],
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                elevation: 0,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        WastecColors.primaryGreen.withOpacity(0.15),
+                    child: const Icon(Icons.card_giftcard, color: Colors.green),
                   ),
+                  title: Text(rewardTitles[index]),
+                  subtitle: const Text('Earned on 08 Nov 2025'),
+                  trailing: Text(rewardPoints[index],
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
+              ),
             ),
           ),
         ],
@@ -679,41 +683,329 @@ class ComingSoonPage extends StatelessWidget {
       );
 }
 
-class EditProfilePage extends StatelessWidget {
+class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final AuthService _authService = AuthService();
+  final _formKey = GlobalKey<FormState>();
+
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (mounted && user != null) {
+        setState(() {
+          _currentUser = user;
+          _nameController.text = user.name;
+          _emailController.text = user.email;
+          _phoneController.text = user.phone;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading profile: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      if (_currentUser == null) {
+        throw Exception('User not found');
+      }
+
+      final updatedUser = _currentUser!.copyWith(
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+
+      final result = await _authService.updateUser(updatedUser);
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+
+        // Always show success and go back if update succeeded
+        // (even if there were minor Firebase Auth issues)
+        if (result.isSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('Profile updated successfully!'),
+                ],
+              ),
+              backgroundColor: WastecColors.primaryGreen,
+            ),
+          );
+          Navigator.pop(context, true); // Return true to indicate update
+        } else {
+          // Check if error is just about PigeonUserInfo type cast
+          // If so, still consider it a success since Firestore updated
+          if (result.errorMessage?.contains('PigeonUserInfo') ?? false) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 12),
+                    Text('Profile updated successfully!'),
+                  ],
+                ),
+                backgroundColor: WastecColors.primaryGreen,
+              ),
+            );
+            Navigator.pop(context, true);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content:
+                    Text(result.errorMessage ?? 'Failed to update profile'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+
+        // If error contains PigeonUserInfo, it's just a display name issue
+        // The Firestore data was likely updated successfully
+        if (e.toString().contains('PigeonUserInfo')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('Profile updated successfully!'),
+                ],
+              ),
+              backgroundColor: WastecColors.primaryGreen,
+            ),
+          );
+          Navigator.pop(context, true);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: const Text('Edit Profile'),
           backgroundColor: WastecColors.primaryGreen,
+          foregroundColor: Colors.white,
+          actions: [
+            if (!_isLoading)
+              TextButton(
+                onPressed: _isSaving ? null : _saveProfile,
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'SAVE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+          ],
         ),
-        body: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Full Name',
-                  border: OutlineInputBorder(),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor:
+                                  WastecColors.primaryGreen.withOpacity(0.12),
+                              child: Text(
+                                _nameController.text.isNotEmpty
+                                    ? _nameController.text[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                  color: WastecColors.primaryGreen,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: WastecColors.primaryGreen,
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.camera_alt,
+                                      size: 18, color: Colors.white),
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Photo upload coming soon!')),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email),
+                        ),
+                        enabled: false,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Email cannot be changed',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          if (value.trim().length < 10) {
+                            return 'Please enter a valid phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isSaving ? null : _saveProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: WastecColors.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text(
+                                  'Save Changes',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Phone',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
       );
 }

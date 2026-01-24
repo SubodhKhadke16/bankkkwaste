@@ -1,14 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/order.dart';
 import '../services/cart_service.dart';
+import '../services/order_service.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('My Cart'),
         backgroundColor: const Color(0xFF00A86B),
@@ -47,10 +49,8 @@ class CartScreen extends StatelessWidget {
         },
       ),
     );
-  }
 
-  Widget _buildEmptyCart(BuildContext context) {
-    return Center(
+  Widget _buildEmptyCart(BuildContext context) => Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -92,10 +92,8 @@ class CartScreen extends StatelessWidget {
         ],
       ),
     );
-  }
 
-  Widget _buildCartSummary(BuildContext context, CartService cartService) {
-    return Container(
+  Widget _buildCartSummary(BuildContext context, CartService cartService) => Container(
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -180,7 +178,6 @@ class CartScreen extends StatelessWidget {
         ),
       ),
     );
-  }
 
   void _showCheckoutDialog(BuildContext context, CartService cartService) {
     showDialog(
@@ -217,9 +214,38 @@ class CartScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              _showOrderConfirmation(context, cartService);
+
+              // Get current user details from Firebase Auth
+              final currentUser = FirebaseAuth.instance.currentUser;
+              final userName = currentUser?.displayName ?? 'Customer';
+              final userEmail = currentUser?.email ?? '';
+
+              // Create order in Firestore with user details
+              final order = Order(
+                id: '',
+                userId: cartService.userId ?? 'guest',
+                items: cartService.items,
+                totalAmount: cartService.totalAmount,
+                status: 'pending',
+                createdAt: DateTime.now(),
+                userName: userName,
+                userEmail: userEmail,
+              );
+
+              // Save order and get ID
+              final orderId = await OrderService.createOrder(order);
+
+              if (orderId != null) {
+                // Clear cart
+                cartService.clearCart();
+
+                // Show success
+                if (context.mounted) {
+                  _showOrderConfirmation(context, orderId);
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF00A86B),
@@ -232,11 +258,7 @@ class CartScreen extends StatelessWidget {
     );
   }
 
-  void _showOrderConfirmation(BuildContext context, CartService cartService) {
-    final itemCount = cartService.itemCount;
-    final total = cartService.totalAmount;
-    cartService.clearCart();
-
+  void _showOrderConfirmation(BuildContext context, String orderId) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -254,15 +276,9 @@ class CartScreen extends StatelessWidget {
           children: [
             const Text('Your order has been placed successfully!'),
             const SizedBox(height: 12),
-            Text('Items: $itemCount'),
-            Text('Total: ₹${total.toStringAsFixed(2)}'),
-            const SizedBox(height: 12),
-            const Text(
-              'Thank you for supporting eco-friendly products! 🌱',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                color: Color(0xFF00A86B),
-              ),
+            Text(
+              'Order ID: ${orderId.substring(0, 8).toUpperCase()}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -270,13 +286,12 @@ class CartScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF00A86B),
               foregroundColor: Colors.white,
             ),
-            child: const Text('Continue Shopping'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -298,8 +313,7 @@ class _CartItemCard extends StatelessWidget {
   final VoidCallback onDecrement;
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
+  Widget build(BuildContext context) => Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -433,5 +447,4 @@ class _CartItemCard extends StatelessWidget {
         ),
       ),
     );
-  }
 }

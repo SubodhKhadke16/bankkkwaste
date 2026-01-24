@@ -1,6 +1,19 @@
 import 'product.dart';
 
 class CartItem {
+
+  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
+        product: Product(
+          id: json['productId'] ?? '',
+          name: json['productName'] ?? '',
+          description: json['productDescription'] ?? '',
+          price: (json['productPrice'] ?? 0).toDouble(),
+          imageUrl: json['productImageUrl'] ?? '',
+          category: json['productCategory'] ?? '',
+          stock: json['productStock'] ?? 0,
+        ),
+        quantity: json['quantity'] ?? 1,
+      );
   CartItem({
     required this.product,
     required this.quantity,
@@ -21,17 +34,4 @@ class CartItem {
         'productStock': product.stock,
         'quantity': quantity,
       };
-
-  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
-        product: Product(
-          id: json['productId'] ?? '',
-          name: json['productName'] ?? '',
-          description: json['productDescription'] ?? '',
-          price: (json['productPrice'] ?? 0).toDouble(),
-          imageUrl: json['productImageUrl'] ?? '',
-          category: json['productCategory'] ?? '',
-          stock: json['productStock'] ?? 0,
-        ),
-        quantity: json['quantity'] ?? 1,
-      );
 }

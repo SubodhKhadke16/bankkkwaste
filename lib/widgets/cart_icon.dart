@@ -10,8 +10,7 @@ class CartIcon extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<CartService>(
+  Widget build(BuildContext context) => Consumer<CartService>(
       builder: (context, cartService, child) {
         return Stack(
           children: [
@@ -62,5 +61,4 @@ class CartIcon extends StatelessWidget {
         );
       },
     );
-  }
 }
