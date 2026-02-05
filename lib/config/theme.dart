@@ -229,4 +229,193 @@ class WastecTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    const baseTextTheme = TextTheme(
+      headlineLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.5,
+        color: Color(0xFFF5F5F5),
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: Color(0xFFF5F5F5),
+      ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: Color(0xFFF5F5F5),
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFFF5F5F5),
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFFE0E0E0),
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFFB0B0B0),
+      ),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF1A1A1A),
+        letterSpacing: 0.3,
+      ),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primaryColor: WastecColors.primaryGreen,
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      colorScheme: const ColorScheme.dark(
+        primary: WastecColors.primaryGreen,
+        onPrimary: Color(0xFF1A1A1A),
+        secondary: WastecColors.accentAmber,
+        onSecondary: Color(0xFF1A1A1A),
+        surface: Color(0xFF1E1E1E),
+        onSurface: Color(0xFFE0E0E0),
+        error: WastecColors.errorRed,
+        onError: Color(0xFF1A1A1A),
+      ),
+      textTheme: baseTextTheme,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E1E1E),
+        foregroundColor: Color(0xFFE0E0E0),
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFE0E0E0),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: const Color(0xFF2A2A2A),
+        elevation: 6,
+        margin: EdgeInsets.zero,
+        shadowColor: Colors.black.withOpacity(0.3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: WastecColors.primaryGreen,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          textStyle: baseTextTheme.labelLarge,
+          shadowColor: WastecColors.darkGreen.withOpacity(0.4),
+          elevation: 2,
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: WastecColors.primaryGreen,
+          side: const BorderSide(color: WastecColors.primaryGreen, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          textStyle: baseTextTheme.labelLarge?.copyWith(
+            color: WastecColors.primaryGreen,
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF2A2A2A),
+        hintStyle: baseTextTheme.bodyMedium,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(
+            color: WastecColors.primaryGreen.withOpacity(0.2),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide(
+            color: WastecColors.primaryGreen.withOpacity(0.3),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: WastecColors.primaryGreen, width: 1.6),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: const BorderSide(color: WastecColors.errorRed, width: 1.4),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: WastecColors.primaryGreen.withOpacity(0.2),
+        disabledColor: const Color(0xFF3A3A3A),
+        selectedColor: WastecColors.primaryGreen.withOpacity(0.3),
+        secondarySelectedColor: WastecColors.primaryGreen,
+        labelStyle: baseTextTheme.bodyMedium,
+        secondaryLabelStyle: baseTextTheme.bodyMedium?.copyWith(
+          color: WastecColors.primaryGreen,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFF1E1E1E),
+        selectedItemColor: WastecColors.primaryGreen,
+        unselectedItemColor: Color(0xFF707070),
+        selectedIconTheme: IconThemeData(size: 26),
+        unselectedIconTheme: IconThemeData(size: 22),
+        elevation: 12,
+        type: BottomNavigationBarType.fixed,
+      ),
+      dividerTheme: DividerThemeData(
+        color: WastecColors.primaryGreen.withOpacity(0.15),
+        thickness: 1,
+        space: 24,
+      ),
+      listTileTheme: const ListTileThemeData(
+        iconColor: WastecColors.primaryGreen,
+        titleTextStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFFE0E0E0),
+        ),
+        subtitleTextStyle: TextStyle(
+          fontSize: 13,
+          color: Color(0xFFB0B0B0),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF2A2A2A),
+        contentTextStyle: baseTextTheme.bodyLarge?.copyWith(
+          color: Color(0xFFE0E0E0),
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        elevation: 6,
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: WastecColors.accentAmber,
+        foregroundColor: Color(0xFF1A1A1A),
+        extendedIconLabelSpacing: 12,
+      ),
+    );
+  }
 }

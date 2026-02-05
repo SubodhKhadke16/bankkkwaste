@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../config/theme.dart';
 import '../data/wastec_bank_data.dart';
-import '../widgets/profile_wallet_actions.dart';
+import '../models/order.dart';
+import '../services/order_service.dart';
 import '../widgets/wastec_order_card.dart';
-import 'home_clean.dart';
 
 /// Unified Track Order Screen with tabs for Waste Bank and Eco-Friendly
 class TrackOrderUnifiedScreen extends StatefulWidget {
@@ -18,7 +19,8 @@ class TrackOrderUnifiedScreen extends StatefulWidget {
 
 class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
   late int _selectedTab;
-  bool _showInProgress = true; // For Waste Bank tab
+  int _selectedFilter = 0; // 0 = All, 1 = Pending, 2 = Confirmed, 3 = Processing, 4 = Delivered
+  int _refreshKey = 0; // Key to force FutureBuilder refresh
 
   @override
   void initState() {
@@ -28,48 +30,97 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: WastecColors.primaryGreen,
-        title: const Text(
-          'Track Your Orders',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        actions: const [ProfileWalletActions()],
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          // Top Tab Selector
+          // Main Tab Navigation (Bank vs Eco)
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: Row(
               children: [
                 Expanded(
-                  child: _buildTopTabButton(
-                    label: 'Waste Bank',
-                    icon: Icons.recycling,
-                    isActive: _selectedTab == 0,
-                    onTap: () => setState(() => _selectedTab = 0),
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _selectedTab = 0;
+                      _selectedFilter = 0;
+                    }),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 0 
+                            ? WastecColors.primaryGreen 
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.recycling,
+                            color: _selectedTab == 0 ? Colors.white : Colors.grey[600],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Waste Bank',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _selectedTab == 0 ? Colors.white : Colors.grey[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildTopTabButton(
-                    label: 'Be Eco Friendly',
-                    icon: Icons.eco,
-                    isActive: _selectedTab == 1,
-                    onTap: () => setState(() => _selectedTab = 1),
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _selectedTab = 1;
+                      _selectedFilter = 0;
+                    }),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 1 
+                            ? WastecColors.primaryGreen 
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.eco,
+                            color: _selectedTab == 1 ? Colors.white : Colors.grey[600],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Eco-Friendly',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _selectedTab == 1 ? Colors.white : Colors.grey[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+          // Filter Navigation Bar (5 items)
+          _buildFilterNavBar(),
           // Content Area
           Expanded(
             child: _selectedTab == 0 
@@ -78,220 +129,109 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavBar(context),
     );
 
-  Widget _buildTopTabButton({
-    required String label,
-    required IconData icon,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) =>
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            decoration: BoxDecoration(
-              color: isActive ? WastecColors.primaryGreen : Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isActive ? WastecColors.primaryGreen : Colors.grey[300]!,
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: isActive ? Colors.white : Colors.grey[600],
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isActive ? Colors.white : Colors.grey[700],
+  // ===== FILTER NAVIGATION BAR =====
+  Widget _buildFilterNavBar() {
+    final filters = ['All', 'Pending', 'Confirmed', 'Processing', 'Delivered'];
+    final filterColors = [
+      Colors.grey,
+      Colors.orange,
+      Colors.blue,
+      Colors.purple,
+      Colors.green,
+    ];
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(filters.length, (index) {
+            final isSelected = _selectedFilter == index;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedFilter = index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? filterColors[index].withOpacity(0.2) 
+                        : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected ? filterColors[index] : Colors.grey[300]!,
+                      width: isSelected ? 2 : 1,
                     ),
-                    overflow: TextOverflow.ellipsis,
+                  ),
+                  child: Text(
+                    filters[index],
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? filterColors[index] : Colors.grey[600],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }),
         ),
-      );
+      ),
+    );
+  }
 
   // ===== WASTE BANK CONTENT =====
   Widget _buildWasteBankContent() {
     final orders = WastecBankData.orders;
-    final inProgressOrders = orders.where((order) => (order['stage']! as int) < 5).toList();
-    final completedOrders = orders.where((order) => (order['stage']! as int) >= 5).toList();
+    
+    // Filter by status based on _selectedFilter
+    List<Map<String, dynamic>> filteredOrders;
+    if (_selectedFilter == 0) {
+      // All orders
+      filteredOrders = orders;
+    } else if (_selectedFilter == 1) {
+      // Pending (stage 0-1)
+      filteredOrders = orders.where((order) => (order['stage']! as int) <= 1).toList();
+    } else if (_selectedFilter == 2) {
+      // Confirmed (stage 2-3)
+      filteredOrders = orders.where((order) => (order['stage']! as int) >= 2 && (order['stage']! as int) <= 3).toList();
+    } else if (_selectedFilter == 3) {
+      // Processing (stage 4)
+      filteredOrders = orders.where((order) => (order['stage']! as int) == 4).toList();
+    } else {
+      // Delivered (stage 5+)
+      filteredOrders = orders.where((order) => (order['stage']! as int) >= 5).toList();
+    }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Book Your New Pickup Card
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                WastecColors.primaryGreen,
-                WastecColors.primaryGreen.withOpacity(0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: WastecColors.primaryGreen.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.check_circle_outline,
-                size: 48,
-                color: Colors.white.withOpacity(0.9),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Book Your New Pickup',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Ready to earn from your scrap? Schedule a pickup now.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.85),
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.add_circle_outline),
-                label: const Text('Start New Pickup'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: WastecColors.primaryGreen,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 28),
-
-        // Orders Tabs (In Progress / History)
-        Row(
-          children: [
-            Expanded(
-              child: _buildTabButton(
-                label: 'Orders in Progress',
-                icon: Icons.local_shipping_outlined,
-                isActive: _showInProgress,
-                onTap: () => setState(() => _showInProgress = true),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTabButton(
-                label: 'Order History',
-                icon: Icons.history,
-                isActive: !_showInProgress,
-                onTap: () => setState(() => _showInProgress = false),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Orders List
-        if (_showInProgress)
-          inProgressOrders.isEmpty
-              ? _buildEmptyState('No Active Orders', 'Your in-progress pickups will appear here')
+    return RefreshIndicator(
+      color: WastecColors.primaryGreen,
+      onRefresh: () async {
+        // Simulate data refresh
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (mounted) {
+          setState(() {
+            // Trigger rebuild to refresh orders
+          });
+        }
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Active Orders List
+          filteredOrders.isEmpty
+              ? _buildEmptyState('No Orders', 'No orders found for this filter')
               : Column(
-                  children: inProgressOrders.map((order) => _buildSimplifiedOrderCard(context, order)).toList(),
-                )
-        else
-          completedOrders.isEmpty
-              ? _buildEmptyState('No Order History', 'Your completed orders will appear here')
-              : Column(
-                  children: completedOrders.map((order) => _buildSimplifiedOrderCard(context, order)).toList(),
+                  children: filteredOrders.map((order) => _buildSimplifiedOrderCard(context, order)).toList(),
                 ),
-      ],
+        ],
+      ),
     );
   }
-
-  Widget _buildTabButton({
-    required String label,
-    required IconData icon,
-    required bool isActive,
-    required VoidCallback onTap,
-  }) =>
-      Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: isActive ? WastecColors.primaryGreen.withOpacity(0.1) : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isActive ? WastecColors.primaryGreen : Colors.grey[300]!,
-                width: isActive ? 2 : 1,
-              ),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  icon,
-                  color: isActive ? WastecColors.primaryGreen : Colors.grey[600],
-                  size: 24,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                    color: isActive ? WastecColors.primaryGreen : Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
 
   Widget _buildSimplifiedOrderCard(BuildContext context, Map<String, dynamic> order) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -512,161 +452,284 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
   }
 
   // ===== ECO-FRIENDLY CONTENT =====
-  Widget _buildEcoFriendlyContent() => SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: Colors.grey[300]!),
+  Widget _buildEcoFriendlyContent() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    
+    if (currentUser == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.login, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text('Please login to view your orders'),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      color: WastecColors.primaryGreen,
+      onRefresh: () async {
+        // Trigger rebuild to refresh orders from Firebase
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          setState(() {
+            // Increment key to force FutureBuilder to rebuild with fresh data
+            _refreshKey++;
+          });
+        }
+      },
+      child: FutureBuilder<List<Order>>(
+        key: ValueKey(_refreshKey), // Use key to force rebuild on refresh
+        future: OrderService.getUserOrders(currentUser.uid),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, size: 80, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text('Error: ${snapshot.error}'),
+                ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey[600]),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Search your orders...',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 14),
+            );
+          }
+
+          var orders = snapshot.data ?? [];
+          
+          // Filter by status based on _selectedFilter
+          if (_selectedFilter == 1) {
+            // Pending
+            orders = orders.where((order) => order.status.toLowerCase() == 'pending').toList();
+          } else if (_selectedFilter == 2) {
+            // Confirmed
+            orders = orders.where((order) => order.status.toLowerCase() == 'confirmed').toList();
+          } else if (_selectedFilter == 3) {
+            // Processing
+            orders = orders.where((order) => order.status.toLowerCase() == 'processing').toList();
+          } else if (_selectedFilter == 4) {
+            // Delivered
+            orders = orders.where((order) => order.status.toLowerCase() == 'delivered').toList();
+          }
+
+          if (orders.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_bag, size: 80, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  const Text('No orders found'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No orders match this filter',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [                // Search bar
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
+                        children: [
+                          Icon(Icons.search, color: Colors.grey[600]),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Search your orders...',
+                              style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Order history header
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              'Order History',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Text(
-              'Past three months',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          // Orders list
-          ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemCount: _sampleEcoOrders.length,
-            itemBuilder: (context, index) {
-              final order = _sampleEcoOrders[index];
-              return _buildEcoOrderCard(context, order);
-            },
-          ),
-          // End message
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Center(
-              child: Text(
-                'You have reached the end of your orders',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-  Widget _buildEcoOrderCard(BuildContext context, Map<String, dynamic> order) => GestureDetector(
-      onTap: () => _showEcoOrderDetails(context, order),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[200]!),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Product icon
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: (order['color'] as Color).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    order['icon'] as IconData,
-                    size: 40,
-                    color: order['color'] as Color,
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Product info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        order['name'] as String,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                // Order history header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    'Order History',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Text(
+                    '${orders.length} order${orders.length > 1 ? 's' : ''}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                // Orders list from Firebase
+                ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) {
+                    final order = orders[index];
+                    return _buildFirebaseOrderCard(context, order);
+                  },
+                ),
+                // End message
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'You have reached the end of your orders',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        order['status'] as String,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: order['status'] == 'Arriving Today'
-                              ? Colors.teal
-                              : Colors.grey[600],
-                          fontWeight: order['status'] == 'Arriving Today'
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        order['date'] as String,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
+  }
 
-  void _showEcoOrderDetails(BuildContext context, Map<String, dynamic> order) {
+  Widget _buildFirebaseOrderCard(BuildContext context, Order order) => GestureDetector(
+        onTap: () => _showFirebaseOrderDetails(context, order),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Order ID and Status
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Order #${order.id.substring(0, 8).toUpperCase()}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatDate(order.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _getStatusColor(order.status),
+                          ),
+                        ),
+                        child: Text(
+                          order.status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: _getStatusColor(order.status),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Delivery Address (if available)
+                  if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            order.deliveryAddress!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  // Items count
+                  Text(
+                    '${order.itemCount} item${order.itemCount > 1 ? 's' : ''}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Amount
+                  Text(
+                    '₹${order.totalAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+  void _showFirebaseOrderDetails(BuildContext context, Order order) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -707,88 +770,174 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Order #123456789',
+                            'Order #${order.id.substring(0, 12).toUpperCase()}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey[600],
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: order['status'] == 'Arriving Today'
-                                  ? Colors.teal.shade50
-                                  : Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: order['status'] == 'Arriving Today'
-                                    ? Colors.teal.shade200
-                                    : Colors.green.shade200,
-                              ),
-                            ),
-                            child: Text(
-                              order['status'] as String,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: order['status'] == 'Arriving Today'
-                                    ? Colors.teal
-                                    : Colors.green,
-                              ),
+                          Text(
+                            _formatDate(order.createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
                             ),
                           ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: (order['color'] as Color).withOpacity(0.1),
-                          shape: BoxShape.circle,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
                         ),
-                        child: Icon(
-                          order['icon'] as IconData,
-                          size: 40,
-                          color: order['color'] as Color,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _getStatusColor(order.status),
+                          ),
+                        ),
+                        child: Text(
+                          order.status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getStatusColor(order.status),
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    order['name'] as String,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ordered on ${order['date'] as String}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const Divider(height: 32),
+                  // Items
                   const Text(
-                    'Delivery Information',
+                    'Items',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(Icons.location_on, 'Delivery Address', '123 Green Street, Eco City'),
-                  _buildInfoRow(Icons.phone, 'Contact', '+91 98765 43210'),
-                  if (order['status'] == 'Arriving Today')
-                    _buildInfoRow(Icons.access_time, 'Expected', 'Today by 6:00 PM'),
+                  const SizedBox(height: 12),
+                  ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: order.items.length,
+                    itemBuilder: (context, index) {
+                      final item = order.items[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.product.name,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Qty: ${item.quantity}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '₹${(item.product.price * item.quantity).toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 24),
+                  // Delivery info
+                  if (order.deliveryAddress != null) ...[
+                    const Text(
+                      'Delivery Address',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      order.deliveryAddress!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (order.phoneNumber != null) ...[
+                    const Text(
+                      'Contact',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      order.phoneNumber!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Total
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Amount',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          '₹${order.totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -820,176 +969,44 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 20, color: WastecColors.primaryGreen),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+  String _formatDate(DateTime date) {
+    return '${date.day} ${_getMonthName(date.month)} ${date.year}';
+  }
 
-  Widget _buildBottomNavBar(BuildContext context) => Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            children: [
-              // Home button
-              Expanded(
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).pushReplacement(
-                      PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => const HomeScreen(),
-                        transitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.arrow_back,
-                        color: WastecColors.mediumGray,
-                        size: 24,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Home',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: WastecColors.mediumGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Container(
-                width: 1,
-                height: 35,
-                color: Colors.grey.shade300,
-              ),
-              // Context button (Waste Bank or Eco)
-              Expanded(
-                child: InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _selectedTab == 0 ? Icons.recycling : Icons.eco,
-                        color: WastecColors.mediumGray,
-                        size: 24,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _selectedTab == 0 ? 'Waste Bank' : 'Eco Friendly',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: WastecColors.mediumGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Track Order (selected)
-              Expanded(
-                child: InkWell(
-                  onTap: () {},
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.local_shipping_outlined,
-                        color: WastecColors.primaryGreen,
-                        size: 24,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Track Order',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: WastecColors.primaryGreen,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Wallet
-              Expanded(
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).pushReplacement(
-                      PageRouteBuilder(
-                        pageBuilder: (_, __, ___) => const HomeScreen(initialIndex: 3),
-                        transitionDuration: Duration.zero,
-                      ),
-                    );
-                  },
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: WastecColors.mediumGray,
-                        size: 24,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Wallet',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: WastecColors.mediumGray,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  String _getMonthName(int month) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    return months[month - 1];
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'confirmed':
+        return Colors.blue;
+      case 'processing':
+        return Colors.purple;
+      case 'delivered':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
 
   static final List<Map<String, dynamic>> _sampleEcoOrders = [
     {

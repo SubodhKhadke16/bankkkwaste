@@ -2,13 +2,18 @@
 
 import '../config/theme.dart';
 import '../data/wastec_bank_data.dart';
-import '../widgets/quick_access_row.dart';
+import '../widgets/wastec_bottom_nav.dart';
 
-class WastecBankScreen extends StatelessWidget {
+class WastecBankScreen extends StatefulWidget {
   const WastecBankScreen({Key? key, this.onNavigateToEcoFriendly}) : super(key: key);
 
   final VoidCallback? onNavigateToEcoFriendly;
 
+  @override
+  State<WastecBankScreen> createState() => _WastecBankScreenState();
+}
+
+class _WastecBankScreenState extends State<WastecBankScreen> {
   @override
   Widget build(BuildContext context) {
     final topRate = WastecBankData.trendingRates.isNotEmpty
@@ -19,62 +24,66 @@ class WastecBankScreen extends StatelessWidget {
     final bottomSafe = MediaQuery.of(context).padding.bottom;
     final bodyBottomPadding = bottomSafe + kBottomNavigationBarHeight + 12.0;
 
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
+    return Scaffold(
+      body: RefreshIndicator(
+        color: WastecColors.primaryGreen,
+        onRefresh: () async {
+          // Simulate data refresh
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (mounted) {
+            setState(() {
+              // Trigger rebuild to refresh data
+            });
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 20, 16, bodyBottomPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                QuickAccessRow(
-                  current: QuickNavTarget.wasteBank,
-                  onNavigateToWasteBank: null,
-                  onNavigateToEcoFriendly: onNavigateToEcoFriendly ?? () {},
+              // Section A: Trending Rates
+              _buildSectionTitle('Trending Rates'),
+              _buildSectionSubtitle(
+                  'These rates are provided by Wastec Bank dealers in your area.'),
+              const SizedBox(height: 12),
+              if (topRate != null)
+                _buildHighlightCard(
+                  icon: Icons.insights_outlined,
+                  tint: const Color(0xFFFFF4DA),
+                  message:
+                      'Top rate today: ${topRate['name']} at ${topRate['price']} · Updated live from trusted dealers.',
                 ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16, 20, 16, bodyBottomPadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Section A: Trending Rates
-                      _buildSectionTitle('Trending Rates'),
-                      _buildSectionSubtitle(
-                          'These rates are provided by Wastec Bank dealers in your area.'),
-                      const SizedBox(height: 12),
-                      if (topRate != null)
-                        _buildHighlightCard(
-                          icon: Icons.insights_outlined,
-                          tint: const Color(0xFFFFF4DA),
-                          message:
-                              'Top rate today: ${topRate['name']} at ${topRate['price']} · Updated live from trusted dealers.',
-                        ),
-                      const SizedBox(height: 12),
-                      _buildTrendingRates(context),
-
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              const SizedBox(height: 12),
+              _buildTrendingRates(context),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
-      ],
+      ),
+      ),
     );
-}  Widget _buildSectionTitle(String title) => Text(
-      title,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
+  }
+
+  Widget _buildSectionTitle(String title) => Builder(
+      builder: (context) => Text(
+        title,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
       ),
     );
 
-  Widget _buildSectionSubtitle(String subtitle) => Text(
-      subtitle,
-      style: const TextStyle(
-        fontSize: 14,
-        color: Colors.black54,
+  Widget _buildSectionSubtitle(String subtitle) => Builder(
+      builder: (context) => Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 14,
+          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+        ),
       ),
     );
 
@@ -83,11 +92,14 @@ class WastecBankScreen extends StatelessWidget {
     required Color tint,
     required String message,
     Color? iconColor,
-  }) => Container(
+  }) => Builder(
+      builder: (context) => Container(
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: tint,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).cardColor
+              : tint,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
@@ -104,7 +116,7 @@ class WastecBankScreen extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.6),
+                color: WastecColors.primaryGreen.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor ?? WastecColors.primaryGreen, size: 20),
@@ -113,29 +125,30 @@ class WastecBankScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                   height: 1.35,
                 ),
               ),
             ),
           ],
         ),
-      );
+      ),
+    );
 
   // Section A: Trending Rates (Horizontal Scroll)
   Widget _buildTrendingRates(BuildContext context) {
     final rates = [
       {'name': 'Paper', 'price': '₹6/kg', 'icon': Icons.description, 'imagePath':'assets/images/papers.png'},
-      {'name': 'Plastic', 'price': '₹2/kg', 'icon': Icons.recycling},
-      {'name': 'Metal', 'price': '₹17/kg', 'icon': Icons.hardware},
-      {'name': 'E-Waste', 'price': '₹10/kg', 'icon': Icons.devices},
-      {'name': 'Newspaper', 'price': '₹7/kg', 'icon': Icons.newspaper},
-      {'name': 'Hard Plastic', 'price': '₹2/kg', 'icon': Icons.category},
-      {'name': 'AC (2 Ton)', 'price': '₹1000/pcs', 'icon': Icons.ac_unit},
-      {'name': 'Iron', 'price': '₹17/kg', 'icon': Icons.build},
+      {'name': 'Plastic', 'price': '₹2/kg', 'icon': Icons.recycling,'imagePath':'assets/images/plastic.jpg'},
+      {'name': 'Metal', 'price': '₹17/kg', 'icon': Icons.hardware,'imagePath':'assets/images/ metal.jpg'},
+      {'name': 'E-Waste', 'price': '₹10/kg', 'icon': Icons.devices,'imagePath':'assets/images/ewaste.jpg'},
+      {'name': 'Newspaper', 'price': '₹7/kg', 'icon': Icons.newspaper,'imagePath':'assets/images/newspaper.jpg'},
+      {'name': 'Hard Plastic', 'price': '₹2/kg', 'icon': Icons.category,'imagePath':'assets/images/hardplastic.avif'},
+      {'name': 'AC (2 Ton)', 'price': '₹1000/pcs', 'icon': Icons.ac_unit,'imagePath':'assets/images/ac.jpg'},
+      {'name': 'Iron', 'price': '₹17/kg', 'icon': Icons.build,'imagePath':'assets/images/iron.jpg'}
     ];
 
     return GridView.count(
@@ -145,14 +158,15 @@ class WastecBankScreen extends StatelessWidget {
       childAspectRatio: 0.75,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children: rates.map((rate) => Material(
+      children: rates.map((rate) => Builder(
+        builder: (context) => Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () => _onRateTap(context, rate),
             borderRadius: BorderRadius.circular(18),
             child: Ink(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: WastecColors.primaryGreen.withOpacity(0.25)),
                 boxShadow: [
@@ -203,16 +217,18 @@ class WastecBankScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Text(
-                              rate['name']! as String,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black87,
-                                height: 1.2,
+                            child: Builder(
+                              builder: (context) => Text(
+                                rate['name']! as String,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  height: 1.2,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -1085,8 +1101,6 @@ class _DeliveryProgress extends StatelessWidget {
     );
   }
 }
-
-/// Detail page for waste material rates
 class WasteRateDetailPage extends StatelessWidget {
   const WasteRateDetailPage({required this.rate, super.key});
 

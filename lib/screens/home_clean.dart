@@ -6,6 +6,7 @@ import '../widgets/location_header.dart';
 import '../widgets/products_section.dart';
 import '../widgets/profile_wallet_actions.dart';
 import '../widgets/wallet_tab.dart';
+import '../widgets/wastec_bottom_nav.dart';
 import 'eco_friendly_page.dart';
 import 'track_order_unified.dart';
 import 'wastec_bank_screen.dart';
@@ -34,10 +35,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: WastecColors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(),
         body: _getBody(),
-        bottomNavigationBar: _buildBottomNavigationBar(),
+        bottomNavigationBar: WastecBottomNav(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            if (index != _currentIndex) {
+              setState(() => _currentIndex = index);
+            }
+          },
+        ),
       );
 
   Widget _getBody() {
@@ -56,6 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onNavigateToEcoFriendly: () => setState(() => _currentIndex = 1),
         );
       case 3:
+        return const TrackOrderUnifiedScreen(initialTab: 0);
+      case 4:
         return const WalletTab();
       default:
         return _HomeTab(
@@ -79,8 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // For Wallet (3), show regular title
-    final titles = ['Wastec Bank', 'Be Eco-Friendly', 'Waste Bank', 'Wallet'];
+    // For Track Order (3) and Wallet (4), show regular title
+    final titles = ['Wastec Bank', 'Be Eco-Friendly', 'Waste Bank', 'Track Order', 'Wallet'];
     return AppBar(
       elevation: 0,
       backgroundColor: WastecColors.primaryGreen,
@@ -95,113 +105,6 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         const CartIcon(),
         ProfileWalletActions(isLoggedIn: widget.isLoggedIn),
-      ],
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    // When viewing Eco-Friendly (index 1), show a custom navbar with: Home, Eco-Friendly, Track Order, Wallet
-    if (_currentIndex == 1) {
-      return BottomNavigationBar(
-        currentIndex: 1, // Eco-Friendly is at index 1 in this contextual bar
-        selectedItemColor: WastecColors.primaryGreen,
-        unselectedItemColor: WastecColors.mediumGray,
-        onTap: (i) {
-          if (i == 0) {
-            setState(() => _currentIndex = 0); // Home
-          } else if (i == 1) {
-            setState(
-                () => _currentIndex = 1); // Eco-Friendly (stays on this tab)
-          } else if (i == 2) {
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) =>
-                    const TrackOrderUnifiedScreen(initialTab: 1),
-                transitionDuration: Duration.zero,
-              ),
-            );
-          } else if (i == 3) {
-            setState(() => _currentIndex = 3); // Wallet
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.arrow_back),
-            activeIcon: Icon(Icons.home_filled),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.eco), label: 'Eco-Friendly'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              label: 'Wallet'),
-        ],
-      );
-    }
-
-    // When viewing Waste Bank (index 2), show a custom navbar with: Home, Waste Bank, Track Order, Wallet
-    if (_currentIndex == 2) {
-      return BottomNavigationBar(
-        currentIndex: 1, // Waste Bank is at index 1 in this contextual bar
-        selectedItemColor: WastecColors.primaryGreen,
-        unselectedItemColor: WastecColors.mediumGray,
-        onTap: (i) {
-          if (i == 0) {
-            setState(() => _currentIndex = 0); // Home
-          } else if (i == 1) {
-            setState(() => _currentIndex = 2); // Waste Bank (stays on this tab)
-          } else if (i == 2) {
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) =>
-                    const TrackOrderUnifiedScreen(initialTab: 0),
-                transitionDuration: Duration.zero,
-              ),
-            );
-          } else if (i == 3) {
-            setState(() => _currentIndex = 3); // Wallet
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.arrow_back),
-            activeIcon: Icon(Icons.home_filled),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.recycling), label: 'Waste Bank'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.local_shipping_outlined), label: 'Track Order'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              label: 'Wallet'),
-        ],
-      );
-    }
-
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      selectedItemColor: WastecColors.primaryGreen,
-      unselectedItemColor: WastecColors.mediumGray,
-      onTap: (i) {
-        setState(() => _currentIndex = i);
-      },
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.arrow_back),
-          activeIcon: Icon(Icons.home_filled),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.eco), label: 'Be Eco-Friendly'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.recycling), label: 'Waste Bank'),
-        BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined), label: 'Wallet'),
       ],
     );
   }
@@ -264,12 +167,12 @@ class _ImpactSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Your Impact heading
-          const Text(
+          Text(
             'Your Impact',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           const SizedBox(height: 4),
@@ -277,7 +180,7 @@ class _ImpactSection extends StatelessWidget {
             'Every bag you send stops waste from hitting landfills.',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.black.withOpacity(0.6),
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
               height: 1.4,
             ),
           ),
@@ -287,9 +190,9 @@ class _ImpactSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,12 +200,12 @@ class _ImpactSection extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'CO₂ Savings',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     Container(
@@ -314,17 +217,17 @@ class _ImpactSection extends StatelessWidget {
                         color: WastecColors.primaryGreen.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.share, size: 16, color: Colors.brown),
-                          SizedBox(width: 6),
-                          Text(
+                          Icon(Icons.share, size: 16, color: WastecColors.primaryGreen),
+                          const SizedBox(width: 6),
+                          const Text(
                             'Share',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Colors.brown,
+                              color: WastecColors.primaryGreen,
                             ),
                           ),
                         ],
@@ -342,11 +245,11 @@ class _ImpactSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'CO₂ reduced by you',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black54,
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -368,36 +271,38 @@ class _ImpactSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Wastec Community Impact',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                      child: Builder(
+                        builder: (context) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Wastec Community Impact',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Together, we have reduced:',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
+                            const SizedBox(height: 4),
+                            Text(
+                              'Together, we have reduced:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     Icon(
@@ -456,21 +361,23 @@ class _ImpactSection extends StatelessWidget {
     required IconData icon,
     required String text,
   }) =>
-      Row(
-        children: [
-          Icon(icon, size: 20, color: WastecColors.primaryGreen),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+      Builder(
+        builder: (context) => Row(
+          children: [
+            Icon(icon, size: 20, color: WastecColors.primaryGreen),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
 }
 

@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../config/theme.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/eco_product_service.dart';
 import '../widgets/cart_icon.dart';
-import '../widgets/quick_access_row.dart';
 
 /// Displays sustainable living ideas and eco product listings.
-class EcoFriendlyPage extends StatelessWidget {
+class EcoFriendlyPage extends StatefulWidget {
   const EcoFriendlyPage({super.key, this.onNavigateToWasteBank});
 
   final VoidCallback? onNavigateToWasteBank;
 
+  @override
+  State<EcoFriendlyPage> createState() => _EcoFriendlyPageState();
+}
+
+class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
   static final List<_EcoTip> _ecoTips = [
     const _EcoTip(
       title: 'Start Home Composting with Cocopeat',
@@ -110,60 +115,54 @@ class EcoFriendlyPage extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              color: Colors.green,
-              onRefresh: () async {
-                // Force rebuild by waiting a moment
-                await Future.delayed(const Duration(milliseconds: 500));
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+  Widget build(BuildContext context) => RefreshIndicator(
+        color: WastecColors.primaryGreen,
+        onRefresh: () async {
+          // Simulate data refresh
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (mounted) {
+            setState(() {
+              // Trigger rebuild to refresh product data
+            });
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    QuickAccessRow(
-                      current: QuickNavTarget.ecoFriendly,
-                      onNavigateToWasteBank: onNavigateToWasteBank ?? () {},
-                      onNavigateToEcoFriendly: null,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Sustainable Living',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildSustainableTips(context),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Eco Product Sales',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildProductGrid(),
-                        ],
+                    Text(
+                      'Sustainable Living',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: WastecColors.primaryGreen,
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    _buildSustainableTips(context),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Eco Product Sales',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: WastecColors.primaryGreen,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildProductGrid(),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       );
 
   Widget _buildSustainableTips(BuildContext context) => SizedBox(
@@ -172,77 +171,84 @@ class EcoFriendlyPage extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           itemBuilder: (context, index) {
             final tip = _ecoTips[index];
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _onTipTap(context, tip),
-                borderRadius: BorderRadius.circular(20),
-                child: Ink(
-                  width: 260,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.shade50,
-                        Colors.green.shade100,
+            return Builder(
+              builder: (context) => Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _onTipTap(context, tip),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Ink(
+                    width: 260,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: Theme.of(context).brightness == Brightness.dark
+                            ? [
+                                Theme.of(context).cardColor,
+                                Theme.of(context).cardColor,
+                              ]
+                            : [
+                                Colors.green.shade50,
+                                Colors.green.shade100,
+                              ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: WastecColors.primaryGreen.withOpacity(0.18),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.green.withOpacity(0.18),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(tip.icon, color: Colors.white, size: 30),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        tip.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                          height: 1.2,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: Text(
-                          tip.description,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.black.withOpacity(0.7),
-                            height: 1.4,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: WastecColors.primaryGreen,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: WastecColors.primaryGreen.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          maxLines: 3,
+                          child: Icon(tip.icon, color: Colors.white, size: 30),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          tip.title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: Text(
+                            tip.description,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                              height: 1.4,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -369,9 +375,10 @@ class ProductDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(product.name),
-        backgroundColor: const Color(0xFF00A86B),
+        backgroundColor: WastecColors.primaryGreen,
         foregroundColor: Colors.white,
         actions: const [
           CartIcon(),
@@ -387,9 +394,9 @@ class ProductDetailPage extends StatelessWidget {
                 height: 250,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: WastecColors.primaryGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.green.withOpacity(0.2)),
+                  border: Border.all(color: WastecColors.primaryGreen.withOpacity(0.2)),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
@@ -591,9 +598,9 @@ class _ProductCard extends StatelessWidget {
           children: [
             Ink(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.green.withOpacity(0.25)),
+                border: Border.all(color: WastecColors.primaryGreen.withOpacity(0.25)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.08),
@@ -671,16 +678,18 @@ class _ProductCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Expanded(
-                            child: Text(
-                              product.name,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black87,
-                                height: 1.2,
+                            child: Builder(
+                              builder: (context) => Text(
+                                product.name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  height: 1.2,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -689,7 +698,7 @@ class _ProductCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.green,
+                              color: WastecColors.primaryGreen,
                             ),
                           ),
                         ],
