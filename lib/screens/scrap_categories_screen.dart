@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 import '../widgets/profile_wallet_actions.dart';
+import '../widgets/wastec_bottom_nav.dart';
 
 class ScrapCategoriesScreen extends StatelessWidget {
   const ScrapCategoriesScreen({super.key});
@@ -49,6 +50,12 @@ class ScrapCategoriesScreen extends StatelessWidget {
         itemBuilder: (context, index) => ScrapCategoryCard(info: categories[index]),
         separatorBuilder: (_, __) => const SizedBox(height: 14),
         itemCount: categories.length,
+      ),
+      bottomNavigationBar: WastecBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          WastecBottomNav.navigateTo(context, index);
+        },
       ),
     );
   }

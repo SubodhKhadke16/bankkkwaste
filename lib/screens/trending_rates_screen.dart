@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../data/wastec_bank_data.dart';
 import '../widgets/profile_wallet_actions.dart';
+import '../widgets/wastec_bottom_nav.dart';
 
 class TrendingRatesScreen extends StatelessWidget {
   const TrendingRatesScreen({super.key});
@@ -12,7 +13,7 @@ class TrendingRatesScreen extends StatelessWidget {
     const rates = WastecBankData.trendingRates;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: WastecColors.primaryGreen,
@@ -33,7 +34,7 @@ class TrendingRatesScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
@@ -107,6 +108,12 @@ class TrendingRatesScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: WastecBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          WastecBottomNav.navigateTo(context, index);
+        },
       ),
     );
   }

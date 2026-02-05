@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../widgets/profile_wallet_actions.dart';
+import '../widgets/wastec_bottom_nav.dart';
 
 class ScrapSubmissionScreen extends StatefulWidget {
   const ScrapSubmissionScreen({Key? key}) : super(key: key);
@@ -26,7 +27,7 @@ class _ScrapSubmissionScreenState extends State<ScrapSubmissionScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: WastecColors.primaryGreen,
@@ -117,6 +118,12 @@ class _ScrapSubmissionScreenState extends State<ScrapSubmissionScreen> {
             ],
           ],
         ),
+      ),
+      bottomNavigationBar: WastecBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          WastecBottomNav.navigateTo(context, index);
+        },
       ),
     );
 

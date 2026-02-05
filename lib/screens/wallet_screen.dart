@@ -9,7 +9,7 @@ class WalletScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: WastecColors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: WastecColors.primaryGreen,

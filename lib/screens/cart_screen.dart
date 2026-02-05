@@ -2,9 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../config/theme.dart';
 import '../models/order.dart';
 import '../services/cart_service.dart';
+import '../services/location_service.dart';
 import '../services/order_service.dart';
+import '../widgets/wastec_bottom_nav.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -13,8 +16,8 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('My Cart'),
-        backgroundColor: const Color(0xFF00A86B),
-        foregroundColor: Colors.white,
+        backgroundColor: WastecColors.primaryGreen,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         elevation: 0,
       ),
       body: Consumer<CartService>(
@@ -46,6 +49,12 @@ class CartScreen extends StatelessWidget {
               _buildCartSummary(context, cartService),
             ],
           );
+        },
+      ),
+      bottomNavigationBar: WastecBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          WastecBottomNav.navigateTo(context, index);
         },
       ),
     );
@@ -95,7 +104,7 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildCartSummary(BuildContext context, CartService cartService) => Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -180,85 +189,141 @@ class CartScreen extends StatelessWidget {
     );
 
   void _showCheckoutDialog(BuildContext context, CartService cartService) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Checkout'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Order Summary:'),
-            const SizedBox(height: 8),
-            Text(
-              '${cartService.itemCount} items',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Total: ₹${cartService.totalAmount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Payment integration coming soon!',
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              // Get current user details from Firebase Auth
-              final currentUser = FirebaseAuth.instance.currentUser;
-              final userName = currentUser?.displayName ?? 'Customer';
-              final userEmail = currentUser?.email ?? '';
-
-              // Create order in Firestore with user details
-              final order = Order(
-                id: '',
-                userId: cartService.userId ?? 'guest',
-                items: cartService.items,
-                totalAmount: cartService.totalAmount,
-                status: 'pending',
-                createdAt: DateTime.now(),
-                userName: userName,
-                userEmail: userEmail,
-              );
-
-              // Save order and get ID
-              final orderId = await OrderService.createOrder(order);
-
-              if (orderId != null) {
-                // Clear cart
-                cartService.clearCart();
-
-                // Show success
-                if (context.mounted) {
-                  _showOrderConfirmation(context, orderId);
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00A86B),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Place Order'),
-          ),
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => _CheckoutDialogScreen(cartService: cartService),
+        fullscreenDialog: true,
       ),
     );
   }
+}
 
-  void _showOrderConfirmation(BuildContext context, String orderId) {
+class _CheckoutDialogScreen extends StatefulWidget {
+  const _CheckoutDialogScreen({required this.cartService});
+
+  final CartService cartService;
+
+  @override
+  State<_CheckoutDialogScreen> createState() => _CheckoutDialogScreenState();
+}
+
+class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
+  final addressController = TextEditingController();
+  final phoneController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  final locationService = LocationService();
+  bool isLoadingLocation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch location when screen opens
+    _autoFetchLocation();
+  }
+
+  @override
+  void dispose() {
+    addressController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _autoFetchLocation() async {
+    final hasPermission = await locationService.requestLocationPermission();
+    if (!hasPermission) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permission needed for delivery'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    final position = await locationService.getCurrentPosition();
+    if (position == null) return;
+
+    final placemark = await locationService.getAddressFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+
+    if (placemark != null && mounted) {
+      // Format complete address
+      final addressParts = <String>[];
+      if (placemark.street != null && placemark.street!.isNotEmpty) {
+        addressParts.add(placemark.street!);
+      }
+      if (placemark.subLocality != null && placemark.subLocality!.isNotEmpty) {
+        addressParts.add(placemark.subLocality!);
+      }
+      if (placemark.locality != null && placemark.locality!.isNotEmpty) {
+        addressParts.add(placemark.locality!);
+      }
+      if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) {
+        addressParts.add(placemark.administrativeArea!);
+      }
+      if (placemark.postalCode != null && placemark.postalCode!.isNotEmpty) {
+        addressParts.add(placemark.postalCode!);
+      }
+
+      final fullAddress = addressParts.join(', ');
+      addressController.text = fullAddress;
+    }
+  }
+
+  Future<void> _refreshLocation() async {
+    setState(() => isLoadingLocation = true);
+    await _autoFetchLocation();
+    if (mounted) {
+      setState(() => isLoadingLocation = false);
+    }
+  }
+
+  Future<void> _placeOrder() async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Get current user details from Firebase Auth
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final userName = currentUser?.displayName ?? 'Customer';
+    final userEmail = currentUser?.email ?? '';
+
+    // Create order in Firestore with user details and delivery info
+    final order = Order(
+      id: '',
+      userId: widget.cartService.userId ?? 'guest',
+      items: widget.cartService.items,
+      totalAmount: widget.cartService.totalAmount,
+      status: 'pending',
+      createdAt: DateTime.now(),
+      userName: userName,
+      userEmail: userEmail,
+      deliveryAddress: addressController.text.trim(),
+      phoneNumber: phoneController.text.trim(),
+    );
+
+    // Save order and get ID
+    final orderId = await OrderService.createOrder(order);
+
+    if (orderId != null && mounted) {
+      // Clear cart
+      widget.cartService.clearCart();
+
+      // Pop checkout screen
+      Navigator.pop(context);
+
+      // Show success
+      if (mounted) {
+        _showOrderConfirmation(orderId);
+      }
+    }
+  }
+
+  void _showOrderConfirmation(String orderId) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -297,6 +362,150 @@ class CartScreen extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        backgroundColor: WastecColors.primaryGreen,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        elevation: 0,
+      ),
+      body: Form(
+        key: formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Order Summary Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Order Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${widget.cartService.itemCount} items',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        Text(
+                          '₹${widget.cartService.totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF00A86B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Delivery Details Header
+            const Text(
+              'Delivery Details',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Address Field
+            TextFormField(
+              controller: addressController,
+              decoration: InputDecoration(
+                labelText: 'Delivery Address *',
+                hintText: 'Enter your complete address',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.location_on),
+                suffixIcon: IconButton(
+                  icon: isLoadingLocation
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.my_location, color: Color(0xFF00A86B)),
+                  onPressed: isLoadingLocation ? null : _refreshLocation,
+                  tooltip: 'Use current location',
+                ),
+              ),
+              maxLines: 3,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter delivery address';
+                }
+                if (value.trim().length < 10) {
+                  return 'Please enter a complete address';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            // Phone Field
+            TextFormField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Phone Number *',
+                hintText: 'Enter your phone number',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter phone number';
+                }
+                if (value.trim().length < 10) {
+                  return 'Please enter a valid phone number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            // Place Order Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _placeOrder,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00A86B),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'Place Order',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 }
 
 class _CartItemCard extends StatelessWidget {

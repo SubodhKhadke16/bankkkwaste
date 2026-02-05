@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 import '../config/theme.dart';
 import '../models/user.dart';
 import '../services/auth_service.dart';
+import '../providers/theme_provider.dart';
 import 'auth/login_screen.dart';
 import 'dev/developer_screen.dart';
 
@@ -112,11 +113,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: WastecColors.primaryGreen,
-          foregroundColor: Colors.white,
           elevation: 0,
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -125,11 +123,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (_errorMessage != null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF9F9F9),
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: WastecColors.primaryGreen,
-          foregroundColor: Colors.white,
           elevation: 0,
         ),
         body: Center(
@@ -161,11 +156,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: WastecColors.primaryGreen,
-        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SafeArea(
@@ -474,7 +466,7 @@ class MyOrdersPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Orders'),
-        backgroundColor: WastecColors.primaryGreen,
+        elevation: 0,
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -517,7 +509,7 @@ class TrackOrdersPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: const Text('Track Orders'),
-          backgroundColor: WastecColors.primaryGreen,
+          elevation: 0,
         ),
         body: const Center(
           child: Column(
@@ -548,7 +540,7 @@ class RewardsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reward Points'),
-        backgroundColor: WastecColors.primaryGreen,
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -606,23 +598,27 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _darkMode = false;
-  String _language = 'English';
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
+  String _language = 'English';      @override
+      Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: const Text('Settings'),
-          backgroundColor: WastecColors.primaryGreen,
+          elevation: 0,
         ),
         body: ListView(
           children: [
-            SwitchListTile(
-              value: _darkMode,
-              title: const Text('Dark Mode'),
-              subtitle: const Text('Toggle dark/light theme'),
-              onChanged: (value) {
-                setState(() => _darkMode = value);
+            // Dark Mode Toggle - Connected to ThemeProvider
+            Consumer<ThemeProvider>(
+              builder: (context, themeProvider, _) {
+                return SwitchListTile(
+                  value: themeProvider.isDarkMode,
+                  title: const Text('Dark Mode'),
+                  subtitle: const Text('Toggle dark/light theme'),
+                  onChanged: (value) async {
+                    debugPrint('🎨 Dark Mode toggle changed to: $value');
+                    await themeProvider.toggleTheme();
+                    debugPrint('🎨 Theme is now: ${themeProvider.themeMode}');
+                  },
+                );
               },
             ),
             const Divider(),
@@ -671,7 +667,7 @@ class ComingSoonPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: Text(title),
-          backgroundColor: WastecColors.primaryGreen,
+          elevation: 0,
         ),
         body: Center(
           child: Text(
@@ -841,8 +837,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: const Text('Edit Profile'),
-          backgroundColor: WastecColors.primaryGreen,
-          foregroundColor: Colors.white,
+          elevation: 0,
           actions: [
             if (!_isLoading)
               TextButton(

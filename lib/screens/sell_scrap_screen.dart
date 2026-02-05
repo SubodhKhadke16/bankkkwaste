@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../widgets/profile_wallet_actions.dart';
+import '../widgets/wastec_bottom_nav.dart';
 import 'scrap_submission_screen.dart';
 
 class SellScrapScreen extends StatelessWidget {
@@ -194,6 +195,12 @@ class SellScrapScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: WastecBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          WastecBottomNav.navigateTo(context, index);
+        },
       ),
     );
   
