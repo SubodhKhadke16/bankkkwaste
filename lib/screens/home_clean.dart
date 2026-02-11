@@ -217,12 +217,12 @@ class _ImpactSection extends StatelessWidget {
                         color: WastecColors.primaryGreen.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.share, size: 16, color: WastecColors.primaryGreen),
-                          const SizedBox(width: 6),
-                          const Text(
+                          SizedBox(width: 6),
+                          Text(
                             'Share',
                             style: TextStyle(
                               fontSize: 12,
@@ -305,7 +305,7 @@ class _ImpactSection extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Icon(
+                    const Icon(
                       Icons.eco,
                       size: 32,
                       color: WastecColors.primaryGreen,

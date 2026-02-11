@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../config/theme.dart';
 import '../models/user.dart';
-import '../services/auth_service.dart';
 import '../providers/theme_provider.dart';
+import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
 import 'dev/developer_screen.dart';
+import 'my_addresses_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -64,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _ProfileOption(
           title: 'My Addresses',
           icon: Icons.location_on,
-          builder: (_) => const ComingSoonPage(title: 'My Addresses'),
+          builder: (_) => const MyAddressesScreen(),
         ),
         _ProfileOption(
           title: 'Payment Methods',
@@ -294,43 +296,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ('Eco Points', '120', Icons.star),
     ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 480;
-        if (isCompact) {
-          return Column(
-            children: [
-              for (var i = 0; i < stats.length; i++)
-                Padding(
-                  padding:
-                      EdgeInsets.only(bottom: i == stats.length - 1 ? 0 : 12),
-                  child: _StatCard(
-                    label: stats[i].$1,
-                    value: stats[i].$2,
-                    icon: stats[i].$3,
-                  ),
-                ),
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            for (var i = 0; i < stats.length; i++)
-              Expanded(
-                child: Padding(
-                  padding:
-                      EdgeInsets.only(right: i == stats.length - 1 ? 0 : 12),
-                  child: _StatCard(
-                    label: stats[i].$1,
-                    value: stats[i].$2,
-                    icon: stats[i].$3,
-                  ),
-                ),
+    return Row(
+      children: [
+        for (var i = 0; i < stats.length; i++)
+          Expanded(
+            child: Padding(
+              padding:
+                  EdgeInsets.only(right: i == stats.length - 1 ? 0 : 12),
+              child: _StatCard(
+                label: stats[i].$1,
+                value: stats[i].$2,
+                icon: stats[i].$3,
               ),
-          ],
-        );
-      },
+            ),
+          ),
+      ],
     );
   }
 
@@ -608,8 +588,7 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             // Dark Mode Toggle - Connected to ThemeProvider
             Consumer<ThemeProvider>(
-              builder: (context, themeProvider, _) {
-                return SwitchListTile(
+              builder: (context, themeProvider, _) => SwitchListTile(
                   value: themeProvider.isDarkMode,
                   title: const Text('Dark Mode'),
                   subtitle: const Text('Toggle dark/light theme'),
@@ -618,8 +597,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     await themeProvider.toggleTheme();
                     debugPrint('🎨 Theme is now: ${themeProvider.themeMode}');
                   },
-                );
-              },
+                ),
             ),
             const Divider(),
             ListTile(

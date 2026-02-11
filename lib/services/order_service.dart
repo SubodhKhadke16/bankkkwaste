@@ -5,11 +5,16 @@ import '../models/order.dart';
 class OrderService {
   static final _firestore = firestore.FirebaseFirestore.instance;
   static final _ordersCollection = _firestore.collection('orders');
+  static final _wasteBankOrdersCollection =
+      _firestore.collection('waste_bank_orders');
 
   /// Create a new order in Firestore
   static Future<String?> createOrder(Order order) async {
     try {
-      final docRef = await _ordersCollection.add(order.toFirestore());
+      // Use separate collection for waste bank orders
+      final collection =
+          order.isWasteBankOrder ? _wasteBankOrdersCollection : _ordersCollection;
+      final docRef = await collection.add(order.toFirestore());
       return docRef.id;
     } catch (e) {
       print('Error creating order: $e');
@@ -17,8 +22,70 @@ class OrderService {
     }
   }
 
-  /// Get all orders for a specific user
+  /// Create a waste bank pickup order
+  static Future<String?> createWasteBankOrder(Order order) async {
+    try {
+      final docRef = await _wasteBankOrdersCollection.add(order.toFirestore());
+      return docRef.id;
+    } catch (e) {
+      print('Error creating waste bank order: $e');
+      return null;
+    }
+  }
+
+  /// Get all orders for a specific user (both regular and waste bank)
   static Future<List<Order>> getUserOrders(String userId) async {
+    try {
+      // Get regular orders
+      final ordersSnapshot = await _ordersCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final orders = ordersSnapshot.docs
+          .map((doc) => Order.fromFirestore(doc.id, doc.data()))
+          .toList();
+
+      // Get waste bank orders
+      final wasteBankSnapshot = await _wasteBankOrdersCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final wasteBankOrders = wasteBankSnapshot.docs
+          .map((doc) => Order.fromFirestore(doc.id, doc.data()))
+          .toList();
+
+      // Combine and sort by date
+      final allOrders = [...orders, ...wasteBankOrders];
+      allOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return allOrders;
+    } catch (e) {
+      print('Error fetching user orders: $e');
+      return [];
+    }
+  }
+
+  /// Get only waste bank orders for a user
+  static Future<List<Order>> getUserWasteBankOrders(String userId) async {
+    try {
+      final snapshot = await _wasteBankOrdersCollection
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => Order.fromFirestore(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      print('Error fetching waste bank orders: $e');
+      return [];
+    }
+  }
+
+  /// Get only eco-friendly orders for a user
+  static Future<List<Order>> getUserEcoOrders(String userId) async {
     try {
       final snapshot = await _ordersCollection
           .where('userId', isEqualTo: userId)
@@ -29,7 +96,7 @@ class OrderService {
           .map((doc) => Order.fromFirestore(doc.id, doc.data()))
           .toList();
     } catch (e) {
-      print('Error fetching user orders: $e');
+      print('Error fetching eco orders: $e');
       return [];
     }
   }

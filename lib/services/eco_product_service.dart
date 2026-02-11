@@ -6,14 +6,12 @@ class EcoProductService {
   static const String _collectionName = 'eco_products';
 
   /// Get all eco-friendly products from Firestore
-  static Stream<List<Product>> getEcoProducts() {
-    return _firestore
+  static Stream<List<Product>> getEcoProducts() => _firestore
         .collection(_collectionName)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => Product.fromFirestore(doc.id, doc.data()))
             .toList());
-  }
 
   /// Get eco products as a future (one-time fetch)
   static Future<List<Product>> getEcoProductsOnce() async {

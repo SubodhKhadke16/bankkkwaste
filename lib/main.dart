@@ -24,17 +24,15 @@ void main() async {
 }
 
 class WastecBankApp extends StatelessWidget {
+
+  const WastecBankApp({required this.themeProvider, Key? key}) : super(key: key);
   final ThemeProvider themeProvider;
 
-  const WastecBankApp({Key? key, required this.themeProvider}) : super(key: key);
-
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider<ThemeProvider>.value(
+  Widget build(BuildContext context) => ChangeNotifierProvider<ThemeProvider>.value(
       value: themeProvider,
       child: Consumer<ThemeProvider>(
-        builder: (context, provider, _) {
-          return StreamBuilder<User?>(
+        builder: (context, provider, _) => StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
               // Get current user ID (null if not logged in)
@@ -57,9 +55,7 @@ class WastecBankApp extends StatelessWidget {
                 ),
               );
             },
-          );
-        },
+          ),
       ),
     );
-  }
 }

@@ -38,7 +38,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    buildToolsVersion = "33.0.0"
+    buildToolsVersion = "35.0.0"
     dependencies {
         // Import the Firebase BoM
         implementation(platform("com.google.firebase:firebase-bom:34.7.0"))

@@ -1,60 +1,59 @@
 import 'package:flutter/material.dart';
+
 import '../config/theme.dart';
-import '../screens/home_clean.dart';
 import '../screens/eco_friendly_page.dart';
-import '../screens/wastec_bank_screen.dart';
+import '../screens/home_clean.dart';
 import '../screens/track_order_unified.dart';
+import '../screens/wastec_bank_screen.dart';
 import '../widgets/wallet_tab.dart';
 
 /// Reusable bottom navigation bar for Wastec app
-/// 
+///
 /// Usage: WastecBottomNav(
 ///   currentIndex: _currentIndex,
 ///   onTap: (index) => setState(() => _currentIndex = index),
 /// )
 class WastecBottomNav extends StatelessWidget {
   const WastecBottomNav({
-    Key? key,
     required this.currentIndex,
     required this.onTap,
+    Key? key,
   }) : super(key: key);
 
   final int currentIndex;
   final Function(int) onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: currentIndex,
-      selectedItemColor: WastecColors.primaryGreen,
-      unselectedItemColor: WastecColors.mediumGray,
-      onTap: (i) => onTap(i),
-      type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home_filled),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.eco),
-          label: 'Eco-Friendly',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.recycling),
-          label: 'Waste Bank',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.local_shipping_outlined),
-          label: 'Track Order',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.account_balance_wallet_outlined),
-          label: 'Wallet',
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => BottomNavigationBar(
+        currentIndex: currentIndex,
+        selectedItemColor: WastecColors.primaryGreen,
+        unselectedItemColor: WastecColors.mediumGray,
+        onTap: onTap,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_filled),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.eco),
+            label: 'Eco-Friendly',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.recycling),
+            label: 'Waste Bank',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.local_shipping_outlined),
+            label: 'Track Order',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            label: 'Wallet',
+          ),
+        ],
+      );
 
   /// Helper method to navigate to appropriate screen based on index
   static void navigateTo(BuildContext context, int index) {
@@ -80,7 +79,10 @@ class WastecBottomNav extends StatelessWidget {
       case 3:
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (_) => const TrackOrderUnifiedScreen(initialTab: 0),
+            builder: (_) => const TrackOrderUnifiedScreen(
+              initialTab: 0,
+              showScaffold: true,
+            ),
           ),
           (route) => false,
         );

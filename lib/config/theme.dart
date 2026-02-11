@@ -23,19 +23,19 @@ class WastecColors {
   static const Color infoBlue = Color(0xFF147AD6);
 
   static LinearGradient heroGradient = const LinearGradient(
-    colors: [primaryGreen, accentTeal],
+    colors: [primaryGreen, darkGreen],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static LinearGradient vibrantMarketplaceGradient = const LinearGradient(
-    colors: [accentAmber, accentCoral],
+    colors: [primaryGreen, Color(0xFF15A85E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static LinearGradient mutedCardGradient = const LinearGradient(
-    colors: [lightGreen, Color(0xFFD6EFE1)],
+    colors: [Color(0xFF0FBF61), primaryGreen],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -403,7 +403,7 @@ class WastecTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: const Color(0xFF2A2A2A),
         contentTextStyle: baseTextTheme.bodyLarge?.copyWith(
-          color: Color(0xFFE0E0E0),
+          color: const Color(0xFFE0E0E0),
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
