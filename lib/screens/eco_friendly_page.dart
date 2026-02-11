@@ -136,7 +136,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Sustainable Living',
                       style: TextStyle(
                         fontSize: 20,
@@ -147,7 +147,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
                     const SizedBox(height: 12),
                     _buildSustainableTips(context),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       'Eco Product Sales',
                       style: TextStyle(
                         fontSize: 20,
@@ -265,7 +265,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: Padding(
-                padding: EdgeInsets.all(32.0),
+                padding: EdgeInsets.all(32),
                 child: CircularProgressIndicator(color: Colors.green),
               ),
             );
@@ -274,7 +274,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
           if (snapshot.hasError) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -305,7 +305,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
           if (products.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(32.0),
+                padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -342,9 +342,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: products.length,
-            itemBuilder: (context, index) {
-              return _ProductCard(product: products[index]);
-            },
+            itemBuilder: (context, index) => _ProductCard(product: products[index]),
           );
         },
       );
@@ -373,8 +371,7 @@ class ProductDetailPage extends StatelessWidget {
   final Product product;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(product.name),
@@ -404,7 +401,7 @@ class ProductDetailPage extends StatelessWidget {
                       ? Image.network(
                           product.imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Icon(
+                          errorBuilder: (context, error, stackTrace) => const Icon(
                             Icons.eco,
                             size: 80,
                             color: Colors.green,
@@ -413,7 +410,7 @@ class ProductDetailPage extends StatelessWidget {
                       : Image.asset(
                           product.imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Icon(
+                          errorBuilder: (context, error, stackTrace) => const Icon(
                             Icons.eco,
                             size: 80,
                             color: Colors.green,
@@ -568,7 +565,6 @@ class ProductDetailPage extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 class _ProductCard extends StatelessWidget {

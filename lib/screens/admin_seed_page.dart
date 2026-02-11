@@ -37,8 +37,7 @@ class _AdminSeedPageState extends State<AdminSeedPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('Admin - Seed Products'),
         backgroundColor: Colors.green,
@@ -46,7 +45,7 @@ class _AdminSeedPageState extends State<AdminSeedPage> {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -99,5 +98,4 @@ class _AdminSeedPageState extends State<AdminSeedPage> {
         ),
       ),
     );
-  }
 }

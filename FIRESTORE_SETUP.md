@@ -107,6 +107,11 @@ service cloud.firestore {
       allow update: if false; // Admin only
     }
     
+    match /waste_bank_orders/{orderId} {
+      allow read, create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if false; // Admin only
+    }
+    
     match /carts/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }

@@ -7,8 +7,7 @@ class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
         elevation: 0,
@@ -50,12 +49,9 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
-  }
 
-  Widget _buildThemeSettingsTile(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, _) {
-        return Column(
+  Widget _buildThemeSettingsTile(BuildContext context) => Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) => Column(
           children: [
             ListTile(
               leading: Icon(
@@ -95,10 +91,8 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ],
-        );
-      },
+        ),
     );
-  }
 
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(

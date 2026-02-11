@@ -1,6 +1,10 @@
 import 'product.dart';
 
 class CartItem {
+  CartItem({
+    required this.product,
+    required this.quantity,
+  });
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
         product: Product(
@@ -14,10 +18,6 @@ class CartItem {
         ),
         quantity: json['quantity'] ?? 1,
       );
-  CartItem({
-    required this.product,
-    required this.quantity,
-  });
 
   final Product product;
   int quantity;

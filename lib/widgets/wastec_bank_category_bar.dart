@@ -21,7 +21,10 @@ class WastecBankCategoryBar extends StatelessWidget {
       icon: Icons.local_shipping,
       background: const Color(0xFFDFF4FF),
       badgeColor: const Color(0xFFBEE6FF),
-      destinationBuilder: (_) => const TrackOrderUnifiedScreen(initialTab: 0),
+      destinationBuilder: (_) => const TrackOrderUnifiedScreen(
+        initialTab: 0,
+        showScaffold: true,
+      ),
     ),
     _WastecCategory(
       label: 'Wallet',
@@ -125,7 +128,8 @@ class _WastecCategoryTileState extends State<_WastecCategoryTile> {
                 ],
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),

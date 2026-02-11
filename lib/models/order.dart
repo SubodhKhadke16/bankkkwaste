@@ -15,6 +15,9 @@ class Order {
     this.userName,
     this.userEmail,
     this.updatedAt,
+    this.pickupDate,
+    this.pickupTimeSlot,
+    this.isWasteBankOrder = false,
   });
 
   factory Order.fromFirestore(String id, Map<String, dynamic> data) {
@@ -35,6 +38,9 @@ class Order {
       userName: data['userName'],
       userEmail: data['userEmail'],
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
+      pickupDate: (data['pickupDate'] as Timestamp?)?.toDate(),
+      pickupTimeSlot: data['pickupTimeSlot'],
+      isWasteBankOrder: data['isWasteBankOrder'] ?? false,
     );
   }
 
@@ -49,6 +55,9 @@ class Order {
   final String? userName;
   final String? userEmail;
   final DateTime? updatedAt;
+  final DateTime? pickupDate;
+  final String? pickupTimeSlot;
+  final bool isWasteBankOrder;
 
   Map<String, dynamic> toFirestore() => {
         'userId': userId,
@@ -61,6 +70,9 @@ class Order {
         if (phoneNumber != null) 'phoneNumber': phoneNumber,
         if (userName != null) 'userName': userName,
         if (userEmail != null) 'userEmail': userEmail,
+        if (pickupDate != null) 'pickupDate': Timestamp.fromDate(pickupDate!),
+        if (pickupTimeSlot != null) 'pickupTimeSlot': pickupTimeSlot,
+        'isWasteBankOrder': isWasteBankOrder,
       };
 
   int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
