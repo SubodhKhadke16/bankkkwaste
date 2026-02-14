@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../home_clean.dart';
-import 'login_screen.dart';
 
-/// AuthGate checks Firebase Auth state and shows appropriate screen
+/// AuthGate checks Firebase Auth state and shows Home Screen
+/// Users can browse the app without logging in
 class AuthGate extends StatelessWidget {
   const AuthGate({Key? key}) : super(key: key);
 
@@ -21,15 +21,13 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        // Show home screen if logged in, otherwise show login screen
-        if (snapshot.hasData && snapshot.data != null) {
-          return HomeScreen(
-            key: ValueKey(snapshot.data!.uid),
-            isLoggedIn: true,
-          );
-        }
-
-        return const LoginScreen();
+        // Always show home screen, but with appropriate login state
+        final isLoggedIn = snapshot.hasData && snapshot.data != null;
+        
+        return HomeScreen(
+          key: ValueKey(snapshot.data?.uid ?? 'guest'),
+          isLoggedIn: isLoggedIn,
+        );
       },
     );
 }

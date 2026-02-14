@@ -208,234 +208,6 @@ class _WastecBankScreenState extends State<WastecBankScreen> {
     );
   }
 
-  void _onRateTap(BuildContext context, Map<String, dynamic> rate) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WasteRateDetailPage(rate: rate),
-      ),
-    );
-  }
-
-  // Section B: Track Your Orders (Vertical List)
-  Widget _buildOrdersList() {
-    final orders = [
-      {
-        'id': '#WSTC1234',
-        'status': 'In Transit',
-        'eta': 'Arrives by 04:30 PM',
-        'lastUpdate': 'Updated 12 mins ago',
-        'date': '10 Nov 2025',
-        'payment': '₹450 • COD',
-        'weight': '19.4 kg total',
-        'notes': 'Mixed plastic & corrugated cardboard',
-        'pickup': 'Asha Nagar Ward 12, Pune',
-        'drop': 'Eco Recovery Hub, Sector 4',
-        'agent': 'Rahul Sharma',
-        'vehicle': 'Mini Truck • MH12 AB 4589',
-        'contact': '+91 98765 43210',
-        'icon': Icons.local_shipping,
-        'color': Colors.deepOrange,
-        'stage': 3,
-        'timeline': const <String?>[
-          '09:10 AM',
-          '10:45 AM',
-          '12:30 PM',
-          '02:05 PM',
-          null,
-          null,
-        ],
-      },
-      {
-        'id': '#WSTC1235',
-        'status': 'Ready for Recycling',
-        'eta': 'Completed 05:45 PM',
-        'lastUpdate': 'Closed 1 day ago',
-        'date': '08 Nov 2025',
-        'payment': '₹320 • Wallet',
-        'weight': '11.2 kg total',
-        'notes': 'Aluminium cans sorted at pickup',
-        'pickup': 'Nav Jeevan Society, Pune',
-        'drop': 'Green Loop Recycler, Chakan',
-        'agent': 'Wastec Fleet 07',
-        'vehicle': 'EV Van • MH12 CL 9087',
-        'contact': '+91 91345 77654',
-        'icon': Icons.verified,
-        'color': Colors.teal,
-        'stage': 5,
-        'timeline': const <String?>[
-          '08:20 AM',
-          '09:40 AM',
-          '11:10 AM',
-          '01:55 PM',
-          '04:00 PM',
-          '05:45 PM',
-        ],
-      },
-      {
-        'id': '#WSTC1236',
-        'status': 'Picked Up',
-        'eta': 'Sorting starts by 01:00 PM',
-        'lastUpdate': 'Driver departed 25 mins ago',
-        'date': '11 Nov 2025',
-        'payment': '₹580 • Online',
-        'weight': '23.0 kg total',
-        'notes': 'Glass items packed separately',
-        'pickup': 'Skyline Residency, Baner',
-        'drop': 'Wastec Material Hub, Wakad',
-        'agent': 'Priya Kulkarni',
-        'vehicle': 'Loader Bike • MH14 XY 3344',
-        'contact': '+91 96543 22109',
-        'icon': Icons.local_shipping,
-        'color': Colors.amber[800],
-        'stage': 1,
-        'timeline': const <String?>[
-          '09:35 AM',
-          '11:00 AM',
-          null,
-          null,
-          null,
-          null,
-        ],
-      },
-    ];
-
-    return Column(
-      children: orders
-          .map((order) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: WastecColors.primaryGreen.withOpacity(0.2)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: (order['color']! as Color).withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            order['icon']! as IconData,
-                            color: order['color']! as Color,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Order ${order['id']}',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: (order['color']! as Color)
-                                          .withOpacity(0.12),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      order['status']! as String,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: order['color']! as Color,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                order['eta']! as String,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: WastecColors.primaryGreen,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                order['lastUpdate']! as String,
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _InfoChip(
-                            icon: Icons.monitor_weight_outlined,
-                            label: order['weight']! as String,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _InfoChip(
-                            icon: Icons.payments_outlined,
-                            label: order['payment']! as String,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _RouteStops(
-                      pickup: order['pickup']! as String,
-                      drop: order['drop']! as String,
-                      notes: order['notes']! as String,
-                    ),
-                    const SizedBox(height: 18),
-                    _DriverCard(
-                      name: order['agent']! as String,
-                      vehicle: order['vehicle']! as String,
-                      contact: order['contact']! as String,
-                    ),
-                    const SizedBox(height: 18),
-                    _DeliveryProgress(stage: order['stage']! as int),
-                    const SizedBox(height: 20),
-                    _OrderTimeline(
-                      currentStage: order['stage']! as int,
-                      timeline: order['timeline']! as List<String?>,
-                    ),
-                  ],
-                ),
-              ))
-          .toList(),
-    );
-  }
-
   // Section C: Profile & Settings (List Tiles)
 }
 
@@ -1273,12 +1045,11 @@ class WasteRateDetailPage extends StatelessWidget {
 }
 
 class _WasteMaterialCard extends StatelessWidget {
-  final Map<String, dynamic> rate;
 
   const _WasteMaterialCard({required this.rate});
+  final Map<String, dynamic> rate;
 
-  Product _getProduct() {
-    return Product(
+  Product _getProduct() => Product(
       id: rate['name']! as String,
       name: rate['name']! as String,
       price: double.parse(
@@ -1288,7 +1059,6 @@ class _WasteMaterialCard extends StatelessWidget {
       imageUrl: rate['imagePath'] as String? ?? '',
       stock: 100,
     );
-  }
 
   void _addToCart(BuildContext context) {
     final cartService = Provider.of<CartService>(context, listen: false);
@@ -1338,8 +1108,7 @@ class _WasteMaterialCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
+  Widget build(BuildContext context) => Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _onRateTap(context),
@@ -1462,5 +1231,4 @@ class _WasteMaterialCard extends StatelessWidget {
         ),
       ),
     );
-  }
 }

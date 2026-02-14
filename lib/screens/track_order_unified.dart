@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
-import '../data/wastec_bank_data.dart';
 import '../models/order.dart';
 import '../services/order_service.dart';
-import '../widgets/wastec_order_card.dart';
+import '../services/wallet_sync_service.dart';
 
 /// Unified Track Order Screen with tabs for Waste Bank and Eco-Friendly
 class TrackOrderUnifiedScreen extends StatefulWidget {
@@ -245,6 +244,9 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
       );
     }
 
+    // Auto-sync wallet for completed orders
+    WalletSyncService.syncCompletedOrders(currentUser.uid);
+
     return RefreshIndicator(
       color: WastecColors.primaryGreen,
       onRefresh: () async {
@@ -337,8 +339,7 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
     );
   }
 
-  Widget _buildWasteBankOrderCard(BuildContext context, Order order) {
-    return GestureDetector(
+  Widget _buildWasteBankOrderCard(BuildContext context, Order order) => GestureDetector(
       onTap: () => _showFirebaseOrderDetails(context, order),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -448,7 +449,6 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
         ),
       ),
     );
-  }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -468,238 +468,6 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
       default:
         return Colors.grey;
     }
-  }
-
-  Widget _buildSimplifiedOrderCard(
-          BuildContext context, Map<String, dynamic> order) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: WastecOrderCard(order: order),
-      );
-
-  Widget _buildEmptyState(String title, String message) => Container(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              size: 80,
-              color: Colors.grey[300],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      );
-
-  void _showDetailedOrderDialog(
-      BuildContext context, Map<String, dynamic> order) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: SingleChildScrollView(
-            controller: scrollController,
-            child: _buildOrderDetailsContent(order),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderDetailsContent(Map<String, dynamic> order) {
-    final currentStage = order['stage'] as int;
-    final orderId = order['id'] as String;
-    final date = order['date'] as String;
-
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2.5),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Order $orderId',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Scheduled for $date',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: currentStage >= 5
-                      ? Colors.green.shade50
-                      : Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: currentStage >= 5 ? Colors.green : Colors.orange,
-                  ),
-                ),
-                child: Text(
-                  currentStage >= 5 ? 'Completed' : 'In Progress',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: currentStage >= 5 ? Colors.green : Colors.orange,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-          const Text(
-            'Order Status',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildOrderTimeline(currentStage),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderTimeline(int currentStage) {
-    final stages = [
-      {'title': 'Order Placed', 'subtitle': 'We received your request'},
-      {'title': 'Pickup Scheduled', 'subtitle': 'Agent assigned'},
-      {'title': 'Agent on the Way', 'subtitle': 'Coming to your location'},
-      {'title': 'Materials Collected', 'subtitle': 'Scrap picked up'},
-      {'title': 'At Facility', 'subtitle': 'Being processed'},
-      {'title': 'Completed', 'subtitle': 'Payment credited'},
-    ];
-
-    return Column(
-      children: List.generate(stages.length, (index) {
-        final isCompleted = index < currentStage;
-        final isCurrent = index == currentStage;
-        final stage = stages[index];
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: isCompleted || isCurrent
-                        ? WastecColors.primaryGreen
-                        : Colors.grey[300],
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isCurrent
-                          ? WastecColors.primaryGreen
-                          : Colors.transparent,
-                      width: 3,
-                    ),
-                  ),
-                  child: Icon(
-                    isCompleted ? Icons.check : Icons.circle,
-                    color: Colors.white,
-                    size: isCompleted ? 16 : 8,
-                  ),
-                ),
-                if (index < stages.length - 1)
-                  Container(
-                    width: 2,
-                    height: 50,
-                    color: isCompleted
-                        ? WastecColors.primaryGreen
-                        : Colors.grey[300],
-                  ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stage['title']!,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: isCompleted || isCurrent
-                            ? Colors.black87
-                            : Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      stage['subtitle']!,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      }),
-    );
   }
 
   // ===== ECO-FRIENDLY CONTENT =====
@@ -1376,49 +1144,4 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
     ];
     return months[month - 1];
   }
-
-  static final List<Map<String, dynamic>> _sampleEcoOrders = [
-    {
-      'name': 'Biodegradable Garbage Bags',
-      'status': 'Arriving Today',
-      'date': '17 December',
-      'icon': Icons.shopping_bag,
-      'color': Colors.orange,
-    },
-    {
-      'name': 'Cocopeat Block 1kg',
-      'status': 'Delivered',
-      'date': '15 December',
-      'icon': Icons.grass,
-      'color': Colors.green,
-    },
-    {
-      'name': 'Bamboo Toothbrush',
-      'status': 'Delivered',
-      'date': '12 December',
-      'icon': Icons.brush,
-      'color': const Color(0xFF8B4513),
-    },
-    {
-      'name': 'Coir Compost Mix',
-      'status': 'Delivered',
-      'date': '10 December',
-      'icon': Icons.eco,
-      'color': const Color(0xFF6B4423),
-    },
-    {
-      'name': 'Edible Rice Plates (Pack of 10)',
-      'status': 'Delivered',
-      'date': '8 December',
-      'icon': Icons.restaurant,
-      'color': Colors.amber,
-    },
-    {
-      'name': 'Cloth Shopping Bag',
-      'status': 'Delivered',
-      'date': '5 December',
-      'icon': Icons.local_mall,
-      'color': Colors.blue,
-    },
-  ];
 }

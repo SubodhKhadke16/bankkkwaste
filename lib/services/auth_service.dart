@@ -28,6 +28,11 @@ class AuthService {
     required String password,
   }) async {
     try {
+      print('🚀 Starting registration process...');
+      print('   Email: $email');
+      print('   Name: $name');
+      print('   Phone: $phone');
+      
       // Create Firebase Auth user
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -35,22 +40,40 @@ class AuthService {
       );
 
       if (credential.user == null) {
+        print('❌ Registration failed: No user credential returned');
         return AuthResult.error('Registration failed');
       }
 
+      final userId = credential.user!.uid;
+      print('✅ Firebase Auth user created with ID: $userId');
+
       // Update display name
-      await credential.user!.updateDisplayName(name);
+      try {
+        await credential.user!.updateDisplayName(name);
+        print('✅ Display name updated');
+      } catch (e) {
+        print('⚠️ Display name update failed (non-critical): $e');
+      }
 
       // Create user profile in Firestore
-      await UserService.createUser(
-        userId: credential.user!.uid,
+      print('📝 Creating Firestore user document...');
+      final userCreated = await UserService.createUser(
+        userId: userId,
         name: name,
         email: email,
         phone: phone,
       );
+      
+      if (!userCreated) {
+        print('❌ Failed to create Firestore user document');
+        return AuthResult.error('Failed to create user profile');
+      }
+      
+      print('✅ Firestore user document created successfully');
+      print('✅ Registration completed for user: $userId');
 
       final user = models.User(
-        id: credential.user!.uid,
+        id: userId,
         name: name,
         email: email,
         phone: phone,
@@ -60,6 +83,7 @@ class AuthService {
 
       return AuthResult.success(user);
     } on auth.FirebaseAuthException catch (e) {
+      print('❌ Firebase Auth error during registration: ${e.code}');
       var message = 'Registration failed';
       if (e.code == 'weak-password') {
         message = 'Password is too weak';
@@ -70,6 +94,7 @@ class AuthService {
       }
       return AuthResult.error(message);
     } catch (e) {
+      print('❌ Unexpected error during registration: $e');
       return AuthResult.error('Registration failed: ${e.toString()}');
     }
   }
@@ -133,13 +158,60 @@ class AuthService {
   // Get current logged-in user from Firestore
   Future<models.User?> getCurrentUser() async {
     try {
+      print('📋 Getting current user from Firestore...');
+      
       final authUser = _auth.currentUser;
-      if (authUser == null) return null;
+      if (authUser == null) {
+        print('⚠️ No authenticated user found');
+        return null;
+      }
+      
+      print('   Auth User ID: ${authUser.uid}');
+      print('   Auth Email: ${authUser.email}');
 
       final doc = await _firestore.collection('users').doc(authUser.uid).get();
-      if (!doc.exists) return null;
+      
+      if (!doc.exists) {
+        print('❌ User document not found in Firestore for ID: ${authUser.uid}');
+        print('⚠️ This could mean:');
+        print('   1. User document was not created during registration');
+        print('   2. User document was deleted');
+        print('   3. Firestore rules are blocking read access');
+        
+        // Try to create the user document if it doesn't exist
+        print('🔧 Attempting to create missing user document...');
+        final userCreated = await UserService.createUser(
+          userId: authUser.uid,
+          name: authUser.displayName ?? 'User',
+          email: authUser.email ?? '',
+        );
+        
+        if (userCreated) {
+          print('✅ User document created successfully');
+          // Try to fetch again
+          final newDoc = await _firestore.collection('users').doc(authUser.uid).get();
+          if (newDoc.exists) {
+            final data = newDoc.data()!;
+            return models.User(
+              id: authUser.uid,
+              name: data['name'] ?? '',
+              email: data['email'] ?? '',
+              phone: data['phone'] ?? '',
+              password: '',
+              createdAt: DateTime.now(),
+            );
+          }
+        }
+        
+        return null;
+      }
 
       final data = doc.data()!;
+      print('✅ User document found');
+      print('   Name: ${data['name']}');
+      print('   Email: ${data['email']}');
+      print('   Phone: ${data['phone']}');
+      
       return models.User(
         id: authUser.uid,
         name: data['name'] ?? '',
@@ -149,6 +221,7 @@ class AuthService {
         createdAt: DateTime.now(),
       );
     } catch (e) {
+      print('❌ Error getting current user: $e');
       return null;
     }
   }
@@ -159,23 +232,32 @@ class AuthService {
   // Update user profile in Firestore
   Future<AuthResult> updateUser(models.User user) async {
     try {
+      print('📝 Updating user profile for: ${user.id}');
+      print('   Name: ${user.name}');
+      print('   Phone: ${user.phone}');
+      
       // Update Firestore user document
       await _firestore.collection('users').doc(user.id).update({
         'name': user.name,
         'phone': user.phone,
+        'updatedAt': firestore.FieldValue.serverTimestamp(),
       });
+      
+      print('✅ User profile updated successfully in Firestore');
 
       // Try to update display name in Firebase Auth, but ignore if it fails
       try {
         await _auth.currentUser?.updateDisplayName(user.name);
+        print('✅ Firebase Auth display name updated');
       } catch (e) {
         // Ignore Firebase Auth display name update errors
         // The Firestore data is what matters most
-        print('Display name update skipped: $e');
+        print('⚠️ Display name update skipped: $e');
       }
 
       return AuthResult.success(user);
     } catch (e) {
+      print('❌ Error updating user profile: $e');
       return AuthResult.error('Update failed: ${e.toString()}');
     }
   }

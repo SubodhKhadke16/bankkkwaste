@@ -13,6 +13,11 @@ class UserService {
     String? profileImage,
   }) async {
     try {
+      print('📝 Creating Firestore user document for: $userId');
+      print('   Name: $name');
+      print('   Email: $email');
+      print('   Phone: ${phone ?? "(none)"}');
+      
       await _usersCollection.doc(userId).set({
         'name': name,
         'email': email,
@@ -23,9 +28,20 @@ class UserService {
         'walletBalance': 0.0,
         'ecoPoints': 0,
       });
-      return true;
+      
+      // Verify the document was created
+      final doc = await _usersCollection.doc(userId).get();
+      if (doc.exists) {
+        print('✅ User document created and verified in Firestore');
+        print('   Document ID: ${doc.id}');
+        print('   Data: ${doc.data()}');
+        return true;
+      } else {
+        print('❌ User document not found after creation');
+        return false;
+      }
     } catch (e) {
-      print('Error creating user: $e');
+      print('❌ Error creating user document: $e');
       return false;
     }
   }
@@ -52,18 +68,31 @@ class UserService {
     String? profileImage,
   }) async {
     try {
+      print('👤 Updating user profile for: $userId');
+      
       final updates = <String, dynamic>{
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      if (name != null) updates['name'] = name;
-      if (phone != null) updates['phone'] = phone;
-      if (profileImage != null) updates['profileImage'] = profileImage;
+      if (name != null) {
+        updates['name'] = name;
+        print('   Name: $name');
+      }
+      if (phone != null) {
+        updates['phone'] = phone;
+        print('   Phone: $phone');
+      }
+      if (profileImage != null) {
+        updates['profileImage'] = profileImage;
+        print('   Profile Image: Updated');
+      }
 
       await _usersCollection.doc(userId).update(updates);
+      print('✅ User profile updated successfully');
+      
       return true;
     } catch (e) {
-      print('Error updating user: $e');
+      print('❌ Error updating user: $e');
       return false;
     }
   }
@@ -75,13 +104,69 @@ class UserService {
     bool isAdd = true,
   }) async {
     try {
+      print('💰 Updating wallet for user: $userId');
+      print('   Amount: ${isAdd ? "+" : "-"}₹$amount');
+      
+      // First, check if user document exists
+      final userDoc = await _usersCollection.doc(userId).get();
+      
+      if (!userDoc.exists) {
+        print('⚠️ User document does not exist, creating it...');
+        // Create user document with initial wallet balance
+        await _usersCollection.doc(userId).set({
+          'walletBalance': isAdd ? amount : -amount,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'ecoPoints': 0,
+        });
+        print('✅ User document created with wallet balance: ₹${isAdd ? amount : -amount}');
+        return true;
+      }
+      
+      // User exists, check if walletBalance field exists
+      final userData = userDoc.data();
+      if (userData == null || !userData.containsKey('walletBalance')) {
+        print('⚠️ walletBalance field missing, initializing...');
+        // Set initial balance
+        await _usersCollection.doc(userId).update({
+          'walletBalance': isAdd ? amount : -amount,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        print('✅ walletBalance initialized to: ₹${isAdd ? amount : -amount}');
+        return true;
+      }
+      
+      // Normal update with increment
       await _usersCollection.doc(userId).update({
         'walletBalance': FieldValue.increment(isAdd ? amount : -amount),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      
+      // Verify the update
+      final updatedDoc = await _usersCollection.doc(userId).get();
+      final newBalance = (updatedDoc.data()?['walletBalance'] ?? 0.0);
+      print('✅ Wallet updated successfully. New balance: ₹$newBalance');
+      
       return true;
     } catch (e) {
-      print('Error updating wallet balance: $e');
+      print('❌ Error updating wallet balance for user $userId: $e');
+      return false;
+    }
+  }
+
+  /// Set wallet balance to a specific value (for corrections)
+  static Future<bool> setWalletBalance(
+    String userId,
+    double balance,
+  ) async {
+    try {
+      await _usersCollection.doc(userId).update({
+        'walletBalance': balance,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      print('Error setting wallet balance: $e');
       return false;
     }
   }
@@ -93,13 +178,22 @@ class UserService {
     bool isAdd = true,
   }) async {
     try {
+      print('🌱 Updating eco points for user: $userId');
+      print('   Points: ${isAdd ? "+" : "-"}$points');
+      
       await _usersCollection.doc(userId).update({
         'ecoPoints': FieldValue.increment(isAdd ? points : -points),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      
+      // Verify the update
+      final updatedDoc = await _usersCollection.doc(userId).get();
+      final newPoints = (updatedDoc.data()?['ecoPoints'] ?? 0);
+      print('✅ Eco points updated successfully. New points: $newPoints');
+      
       return true;
     } catch (e) {
-      print('Error updating eco points: $e');
+      print('❌ Error updating eco points for user $userId: $e');
       return false;
     }
   }
