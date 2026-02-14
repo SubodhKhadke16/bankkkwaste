@@ -9,6 +9,8 @@ import '../models/saved_address.dart';
 import '../services/cart_service.dart';
 import '../services/location_service.dart';
 import '../services/order_service.dart';
+import '../services/transaction_service.dart';
+import '../services/user_service.dart';
 import 'my_addresses_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -180,8 +182,7 @@ class _CartScreenState extends State<CartScreen>
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, Color color) {
-    return Padding(
+  Widget _buildSectionHeader(String title, IconData icon, Color color) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
@@ -198,7 +199,6 @@ class _CartScreenState extends State<CartScreen>
         ],
       ),
     );
-  }
 
   Widget _buildEmptyCart(BuildContext context) => Center(
         child: Column(
@@ -250,8 +250,7 @@ class _CartScreenState extends State<CartScreen>
     List<CartItem> items,
     String categoryName,
     double total,
-  ) {
-    return Container(
+  ) => Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         boxShadow: [
@@ -316,7 +315,6 @@ class _CartScreenState extends State<CartScreen>
         ),
       ),
     );
-  }
 
   void _proceedToCheckout(
       BuildContext context, List<CartItem> items, String categoryName) {
@@ -370,12 +368,37 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
   final locationService = LocationService();
   bool isLoadingLocation = false;
   SavedAddress? selectedAddress;
+  String selectedPaymentMethod = 'wallet';
+  double walletBalance = 0.0;
+  bool isLoadingWallet = false;
 
   @override
   void initState() {
     super.initState();
     // Auto-fetch location when screen opens
     _autoFetchLocation();
+    _loadWalletBalance();
+  }
+
+  Future<void> _loadWalletBalance() async {
+    setState(() => isLoadingWallet = true);
+    try {
+      final userId = widget.cartService.userId;
+      if (userId != null) {
+        final userData = await UserService.getUser(userId);
+        if (userData != null && mounted) {
+          setState(() {
+            walletBalance = (userData['walletBalance'] ?? 0.0).toDouble();
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading wallet balance: $e');
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingWallet = false);
+      }
+    }
   }
 
   @override
@@ -472,6 +495,27 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
       return;
     }
 
+    final totalAmount = widget.itemsToCheckout
+        .fold<double>(0, (sum, item) => sum + item.totalPrice);
+
+    // Validate wallet balance if wallet payment is selected
+    if (selectedPaymentMethod == 'wallet') {
+      if (walletBalance < totalAmount) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Insufficient wallet balance. Available: ₹${walletBalance.toStringAsFixed(2)}, Required: ₹${totalAmount.toStringAsFixed(2)}',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     // Get current user details from Firebase Auth
     final currentUser = FirebaseAuth.instance.currentUser;
     final userName = currentUser?.displayName ?? 'Customer';
@@ -482,8 +526,7 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
       id: '',
       userId: widget.cartService.userId ?? 'guest',
       items: widget.itemsToCheckout, // Use only eco items
-      totalAmount: widget.itemsToCheckout
-          .fold<double>(0, (sum, item) => sum + item.totalPrice),
+      totalAmount: totalAmount,
       status: 'pending',
       createdAt: DateTime.now(),
       userName: userName,
@@ -496,6 +539,22 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
     final orderId = await OrderService.createOrder(order);
 
     if (orderId != null && mounted) {
+      // Process payment based on selected method
+      if (selectedPaymentMethod == 'wallet') {
+        // Debit from wallet
+        final userId = widget.cartService.userId;
+        if (userId != null) {
+          await TransactionService.debitWalletForPurchase(
+            userId: userId,
+            amount: totalAmount,
+            orderId: orderId,
+            userEmail: userEmail,
+            description: 'Eco-Friendly Product Purchase - ${widget.itemsToCheckout.length} items',
+          );
+        }
+      }
+      // For UPI/Card/COD, payment is processed externally or on delivery
+
       // Remove only eco items from cart
       for (final item in widget.itemsToCheckout) {
         widget.cartService.removeFromCart(item.product.id);
@@ -506,12 +565,19 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
 
       // Show success
       if (mounted) {
-        _showOrderConfirmation(orderId);
+        _showOrderConfirmation(orderId, selectedPaymentMethod);
       }
     }
   }
 
-  void _showOrderConfirmation(String orderId) {
+  void _showOrderConfirmation(String orderId, String paymentMethod) {
+    final paymentMethodText = {
+      'wallet': 'Wallet',
+      'upi': 'UPI',
+      'card': 'Card',
+      'cod': 'Cash on Delivery',
+    }[paymentMethod] ?? paymentMethod;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -532,6 +598,11 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
             Text(
               'Order ID: ${orderId.substring(0, 8).toUpperCase()}',
               style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Payment: $paymentMethodText',
+              style: const TextStyle(color: Colors.grey),
             ),
           ],
         ),
@@ -694,6 +765,122 @@ class _CheckoutDialogScreenState extends State<_CheckoutDialogScreen> {
                 }
                 return null;
               },
+            ),
+            const SizedBox(height: 24),
+            // Payment Method Section
+            const Text(
+              'Payment Method',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  // Wallet Option
+                  RadioListTile<String>(
+                    value: 'wallet',
+                    groupValue: selectedPaymentMethod,
+                    onChanged: (value) {
+                      setState(() => selectedPaymentMethod = value!);
+                    },
+                    title: const Row(
+                      children: [
+                        Icon(Icons.account_balance_wallet, color: Color(0xFF00A86B)),
+                        SizedBox(width: 12),
+                        Text('Wallet'),
+                      ],
+                    ),
+                    subtitle: isLoadingWallet
+                        ? const Padding(
+                            padding: EdgeInsets.only(left: 36),
+                            child: Text('Loading balance...'),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(left: 36),
+                            child: Text(
+                              'Available: ₹${walletBalance.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: walletBalance >= totalAmount
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                    activeColor: const Color(0xFF00A86B),
+                  ),
+                  const Divider(height: 1),
+                  // UPI Option
+                  RadioListTile<String>(
+                    value: 'upi',
+                    groupValue: selectedPaymentMethod,
+                    onChanged: (value) {
+                      setState(() => selectedPaymentMethod = value!);
+                    },
+                    title: const Row(
+                      children: [
+                        Icon(Icons.qr_code_scanner, color: Color(0xFF00A86B)),
+                        SizedBox(width: 12),
+                        Text('UPI'),
+                      ],
+                    ),
+                    subtitle: const Padding(
+                      padding: EdgeInsets.only(left: 36),
+                      child: Text('Google Pay, PhonePe, Paytm'),
+                    ),
+                    activeColor: const Color(0xFF00A86B),
+                  ),
+                  const Divider(height: 1),
+                  // Card Option
+                  RadioListTile<String>(
+                    value: 'card',
+                    groupValue: selectedPaymentMethod,
+                    onChanged: (value) {
+                      setState(() => selectedPaymentMethod = value!);
+                    },
+                    title: const Row(
+                      children: [
+                        Icon(Icons.credit_card, color: Color(0xFF00A86B)),
+                        SizedBox(width: 12),
+                        Text('Credit/Debit Card'),
+                      ],
+                    ),
+                    subtitle: const Padding(
+                      padding: EdgeInsets.only(left: 36),
+                      child: Text('Visa, Mastercard, RuPay'),
+                    ),
+                    activeColor: const Color(0xFF00A86B),
+                  ),
+                  const Divider(height: 1),
+                  // COD Option
+                  RadioListTile<String>(
+                    value: 'cod',
+                    groupValue: selectedPaymentMethod,
+                    onChanged: (value) {
+                      setState(() => selectedPaymentMethod = value!);
+                    },
+                    title: const Row(
+                      children: [
+                        Icon(Icons.money, color: Color(0xFF00A86B)),
+                        SizedBox(width: 12),
+                        Text('Cash on Delivery'),
+                      ],
+                    ),
+                    subtitle: const Padding(
+                      padding: EdgeInsets.only(left: 36),
+                      child: Text('Pay when you receive'),
+                    ),
+                    activeColor: const Color(0xFF00A86B),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             // Place Order Button
@@ -1038,16 +1225,14 @@ class _WasteBankScheduleScreenState extends State<_WasteBankScheduleScreen> {
       initialDate: selectedDate ?? now,
       firstDate: firstDate,
       lastDate: lastDate,
-      builder: (context, child) {
-        return Theme(
+      builder: (context, child) => Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
               primary: Color(0xFF00A86B),
             ),
           ),
           child: child!,
-        );
-      },
+        ),
     );
 
     if (picked != null && mounted) {

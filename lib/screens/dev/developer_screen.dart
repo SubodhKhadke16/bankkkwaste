@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../config/theme.dart';
 import '../../models/user.dart';
 import '../../services/auth_service.dart';
+import '../wallet_test_screen.dart';
 
 class DeveloperScreen extends StatefulWidget {
   const DeveloperScreen({Key? key}) : super(key: key);
@@ -135,6 +136,65 @@ class _DeveloperScreenState extends State<DeveloperScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Test Tools Section
+                    _buildSectionHeader('Test Tools'),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.science,
+                                  color: WastecColors.primaryGreen,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Wallet & Transactions',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const WalletTestScreen(),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.account_balance_wallet),
+                              label: const Text('Test Wallet Features'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: WastecColors.primaryGreen,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size(double.infinity, 45),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Test wallet crediting, transactions, and order completion',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: WastecColors.mediumGray,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // Current User Section
                     _buildSectionHeader('Current Logged-In User'),
                     const SizedBox(height: 12),

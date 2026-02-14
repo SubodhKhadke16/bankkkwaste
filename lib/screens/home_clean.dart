@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../services/auth_service.dart';
+import '../services/wallet_sync_service.dart';
 import '../widgets/cart_icon.dart';
 import '../widgets/location_header.dart';
-import '../widgets/products_section.dart';
 import '../widgets/profile_wallet_actions.dart';
 import '../widgets/wallet_tab.dart';
 import '../widgets/wastec_bottom_nav.dart';
@@ -31,6 +32,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    
+    // Auto-sync wallet when home screen loads
+    _syncWallet();
+  }
+
+  Future<void> _syncWallet() async {
+    final userId = AuthService().currentUserId;
+    if (userId != null) {
+      await WalletSyncService.syncCompletedOrders(userId);
+    }
   }
 
   @override
@@ -147,9 +158,10 @@ class _HomeTab extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const _DonateWasteCard(),
                     const SizedBox(height: 24),
                     const _ImpactSection(),
-                    const ProductsSection(),
                   ],
                 ),
               ),
@@ -453,6 +465,94 @@ class _PromoCard extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      );
+}
+
+class _DonateWasteCard extends StatelessWidget {
+  const _DonateWasteCard();
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Donate Waste & Support CSR - Coming Soon!'),
+              backgroundColor: WastecColors.primaryGreen,
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFCE4EC), Color(0xFFF8BBD0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.volunteer_activism_outlined,
+                  color: Color(0xFFE91E63),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Donate Waste & Support CSR',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Help communities through waste donation',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.black54,
+                size: 16,
+              ),
+            ],
           ),
         ),
       );

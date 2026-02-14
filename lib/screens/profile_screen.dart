@@ -5,9 +5,12 @@ import '../config/theme.dart';
 import '../models/user.dart';
 import '../providers/theme_provider.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 import 'auth/login_screen.dart';
+import 'auth/register_screen.dart';
 import 'dev/developer_screen.dart';
 import 'my_addresses_screen.dart';
+import 'wallet_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -21,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _currentUser;
   bool _isLoading = true;
   String? _errorMessage;
+  double _walletBalance = 0.0;
 
   @override
   void initState() {
@@ -37,6 +41,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
           _errorMessage = null;
         });
+        // Load wallet balance if user is logged in
+        if (user != null) {
+          _loadWalletBalance();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -48,16 +56,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _loadWalletBalance() async {
+    try {
+      final userId = _authService.currentUserId;
+      if (userId != null) {
+        final userData = await UserService.getUser(userId);
+        if (userData != null && mounted) {
+          setState(() {
+            _walletBalance = (userData['walletBalance'] ?? 0.0).toDouble();
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading wallet balance: $e');
+    }
+  }
+
   // Check if current user is the developer (using email only, since Firebase doesn't expose passwords)
   bool get _isDeveloper =>
       _currentUser?.email.toLowerCase() == 'rohit@test.com';
 
   List<_ProfileOption> get _options => [
-        _ProfileOption(
-          title: 'My Orders / Scrap History',
-          icon: Icons.history,
-          builder: (_) => const MyOrdersPage(),
-        ),
+        
         _ProfileOption(
           title: 'Reward Points',
           icon: Icons.star,
@@ -157,6 +177,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
+    // Show login prompt if user is not logged in
+    if (_currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 100,
+                  color: WastecColors.primaryGreen.withOpacity(0.5),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Login to See Your Profile',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Access your wallet, rewards, orders, and personalized settings',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: WastecColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Login Now',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    );
+                  },
+                  child: const Text(
+                    'Don\'t have an account? Sign Up',
+                    style: TextStyle(color: WastecColors.primaryGreen),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -247,6 +345,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 16),
               _buildStatsSection(),
               const SizedBox(height: 16),
+              _buildEnvironmentalImpact(),
+              const SizedBox(height: 16),
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -291,9 +391,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildStatsSection() {
     final stats = [
-      ('₹ Earned', '₹2,450', Icons.currency_rupee),
-      ('Weight Recycled', '52 kg', Icons.recycling),
-      ('Eco Points', '120', Icons.star),
+      ('₹ Earned', '₹${_walletBalance.toStringAsFixed(2)}', Icons.currency_rupee, true), // true = tappable
+      ('Weight Recycled', '52 kg', Icons.recycling, false),
+      ('Eco Points', '120', Icons.star, false),
     ];
 
     return Row(
@@ -307,10 +407,122 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: stats[i].$1,
                 value: stats[i].$2,
                 icon: stats[i].$3,
+                isTappable: stats[i].$4,
+                onTap: stats[i].$4
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WalletScreen(),
+                          ),
+                        ).then((_) {
+                          // Refresh wallet balance when returning from wallet screen
+                          _loadWalletBalance();
+                        });
+                      }
+                    : null,
               ),
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildEnvironmentalImpact() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Environmental Impact',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 1.8,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildImpactCard(
+              title: 'Trees Saved',
+              value: '0.0 Trees',
+              color: const Color(0xFFE8F5E9),
+              icon: Icons.park_outlined,
+            ),
+            _buildImpactCard(
+              title: 'Air Pollution saved',
+              value: '0.0 Kgs of Air',
+              color: const Color(0xFFE3F2FD),
+              icon: Icons.air_outlined,
+            ),
+            _buildImpactCard(
+              title: 'Water Pollution saved',
+              value: '0.0 Litres of water',
+              color: const Color(0xFFE0F2F1),
+              icon: Icons.water_drop_outlined,
+            ),
+            _buildImpactCard(
+              title: 'Land pollution Saved',
+              value: '0.0 Sq Mtrs of Land',
+              color: const Color(0xFFFFF9C4),
+              icon: Icons.terrain_outlined,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImpactCard({
+    required String title,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: WastecColors.primaryGreen,
+            size: 20,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: WastecColors.primaryGreen,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -364,43 +576,59 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.isTappable = false,
+    this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final bool isTappable;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Card(
-        elevation: 0,
-        color: WastecColors.lightGreen,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, color: WastecColors.primaryGreen, size: 32),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: WastecColors.primaryGreen,
-                ),
+  Widget build(BuildContext context) {
+    final card = Card(
+      elevation: 0,
+      color: WastecColors.lightGreen,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: WastecColors.primaryGreen, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: WastecColors.primaryGreen,
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
+      ),
+    );
+
+    if (isTappable && onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: card,
       );
+    }
+    
+    return card;
+  }
 }
 
 class _ProfileOption {

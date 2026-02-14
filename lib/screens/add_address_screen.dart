@@ -412,7 +412,6 @@ class _MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<_MapPickerScreen> {
   late LatLng _selectedPosition;
-  GoogleMapController? _mapController;
 
   @override
   void initState() {

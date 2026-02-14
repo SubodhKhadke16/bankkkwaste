@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 
 import '../models/order.dart';
+import 'transaction_service.dart';
 
 class OrderService {
   static final _firestore = firestore.FirebaseFirestore.instance;
@@ -116,16 +117,65 @@ class OrderService {
   }
 
   /// Update order status
-  static Future<bool> updateOrderStatus(String orderId, String status) async {
+  /// Automatically credits wallet when waste bank order is completed
+  static Future<bool> updateOrderStatus(
+    String orderId,
+    String status, {
+    bool isWasteBankOrder = false,
+  }) async {
     try {
-      await _ordersCollection.doc(orderId).update({
+      final collection =
+          isWasteBankOrder ? _wasteBankOrdersCollection : _ordersCollection;
+
+      await collection.doc(orderId).update({
         'status': status,
         'updatedAt': firestore.FieldValue.serverTimestamp(),
       });
+
+      // If waste bank order is completed, credit money to wallet
+      if (isWasteBankOrder && status == 'completed') {
+        final order = await _getWasteBankOrder(orderId);
+        if (order != null) {
+          // Get user email
+          String? userEmail;
+          try {
+            final userDoc = await _firestore.collection('users').doc(order.userId).get();
+            if (userDoc.exists) {
+              userEmail = userDoc.data()?['email'] as String?;
+            }
+          } catch (e) {
+            print('⚠️ Could not fetch user email: $e');
+          }
+          
+          await TransactionService.creditWalletFromOrder(
+            userId: order.userId,
+            amount: order.totalAmount,
+            orderId: orderId,
+            userEmail: userEmail,
+            description:
+                'Waste Bank Pickup Complete - ${order.itemCount} items collected',
+          );
+        }
+      }
+
       return true;
     } catch (e) {
       print('Error updating order status: $e');
       return false;
+    }
+  }
+
+  /// Get a specific waste bank order by ID (private helper)
+  static Future<Order?> _getWasteBankOrder(String orderId) async {
+    try {
+      final doc = await _wasteBankOrdersCollection.doc(orderId).get();
+      if (doc.exists) {
+        return Order.fromFirestore(doc.id, doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching waste bank order: $e');
+      return null;
     }
   }
 
