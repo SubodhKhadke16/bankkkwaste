@@ -240,4 +240,24 @@ class UserService {
       return [];
     }
   }
+
+  /// Check if user profile exists and is complete
+  static Future<bool> userProfileExists(String userId) async {
+    try {
+      final doc = await _usersCollection.doc(userId).get();
+      
+      if (!doc.exists || doc.data() == null) return false;
+      
+      final data = doc.data()!;
+      final hasName = data.containsKey('name') && 
+                      data['name'].toString().trim().isNotEmpty;
+      final hasPhone = data.containsKey('phone') && 
+                       data['phone'].toString().trim().isNotEmpty;
+      
+      return hasName && hasPhone;
+    } catch (e) {
+      print('Error checking user profile: $e');
+      return false;
+    }
+  }
 }

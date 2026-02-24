@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
-import '../screens/auth/login_screen.dart';
+import '../screens/otp_login_screen.dart';
 import '../screens/debug_transactions_screen.dart';
 import '../screens/transaction_history_screen.dart';
 import '../services/auth_service.dart';
@@ -298,7 +298,7 @@ class _LoginPromptCard extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
+                    builder: (_) => const OtpLoginScreen(),
                   ),
                 );
               },

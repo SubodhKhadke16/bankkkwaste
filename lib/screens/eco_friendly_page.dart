@@ -846,19 +846,3 @@ class _EcoTip {
   final String description;
   final IconData icon;
 }
-
-class _EcoProduct {
-  const _EcoProduct({
-    required this.name,
-    required this.tag,
-    required this.price,
-    required this.icon,
-    required this.imagePath,
-  });
-
-  final String name;
-  final String tag;
-  final int price;
-  final IconData icon;
-  final String imagePath;
-}

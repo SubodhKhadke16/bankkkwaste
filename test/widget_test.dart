@@ -7,13 +7,15 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wastec_bank_app/main.dart';
+import 'package:wastec_bank_app/providers/theme_provider.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (tester) async {
     // Build our app and trigger a frame.
-  await tester.pumpWidget(const WastecBankApp());
+    final themeProvider = ThemeProvider();
+    await tester.pumpWidget(WastecBankApp(themeProvider: themeProvider));
 
-  // Basic smoke test: verify app title renders.
-  expect(find.text('Wastec Bank'), findsOneWidget);
+    // Basic smoke test: verify app title renders.
+    expect(find.text('Wastec Bank'), findsOneWidget);
   });
 }

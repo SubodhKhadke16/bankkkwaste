@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screens/auth/login_screen.dart';
+import '../screens/otp_login_screen.dart';
 import '../screens/profile_screen.dart';
 
 class ProfileWalletActions extends StatelessWidget {
@@ -36,7 +36,7 @@ class ProfileWalletActions extends StatelessWidget {
                   } else {
                     // Navigate to login screen
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      MaterialPageRoute(builder: (_) => const OtpLoginScreen()),
                     );
                   }
                 },
