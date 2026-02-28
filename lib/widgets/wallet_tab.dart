@@ -5,50 +5,88 @@ import '../screens/otp_login_screen.dart';
 import '../screens/debug_transactions_screen.dart';
 import '../screens/transaction_history_screen.dart';
 import '../services/auth_service.dart';
+import '../services/connectivity_service.dart';
 import '../services/transaction_service.dart';
 import '../services/user_service.dart';
+import '../widgets/offline_screen.dart';
 
-class WalletTab extends StatelessWidget {
+class WalletTab extends StatefulWidget {
   const WalletTab({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _WalletBalanceCard(),
-              const SizedBox(height: 20),
-              Text(
-                'Quick Actions',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black87,
+  State<WalletTab> createState() => _WalletTabState();
+}
+
+class _WalletTabState extends State<WalletTab> {
+  final ConnectivityService _connectivityService = ConnectivityService();
+
+  @override
+  void dispose() {
+    _connectivityService.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndRefresh() async {
+    final isConnected = await _connectivityService.checkConnection();
+    if (isConnected) {
+      setState(() {
+        // Trigger rebuild with connection
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: _connectivityService.connectionStatus,
+      initialData: _connectivityService.isConnected,
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data ?? true;
+        
+        if (!isConnected) {
+          return OfflineScreen(onRetry: _checkAndRefresh);
+        }
+        
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _WalletBalanceCard(),
+                const SizedBox(height: 20),
+                Text(
+                  'Quick Actions',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const _WalletQuickActions(),
-              const SizedBox(height: 24),
-              Text(
-                'Wallet Services',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black87,
+                const SizedBox(height: 12),
+                const _WalletQuickActions(),
+                const SizedBox(height: 24),
+                Text(
+                  'Wallet Services',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const _WalletServicesList(),
-            ],
+                const SizedBox(height: 12),
+                const _WalletServicesList(),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      },
+    );
+  }
 }
 
 class _WalletQuickActions extends StatelessWidget {

@@ -5,6 +5,8 @@ import '../config/theme.dart';
 import '../data/wastec_bank_data.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/connectivity_service.dart';
+import '../widgets/offline_screen.dart';
 
 class WastecBankScreen extends StatefulWidget {
   const WastecBankScreen({Key? key, this.onNavigateToEcoFriendly})
@@ -17,8 +19,43 @@ class WastecBankScreen extends StatefulWidget {
 }
 
 class _WastecBankScreenState extends State<WastecBankScreen> {
+  final ConnectivityService _connectivityService = ConnectivityService();
+
+  @override
+  void dispose() {
+    _connectivityService.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndRefresh() async {
+    final isConnected = await _connectivityService.checkConnection();
+    if (isConnected) {
+      setState(() {
+        // Trigger rebuild with connection
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: _connectivityService.connectionStatus,
+      initialData: _connectivityService.isConnected,
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data ?? true;
+        
+        if (!isConnected) {
+          return Scaffold(
+            body: OfflineScreen(onRetry: _checkAndRefresh),
+          );
+        }
+        
+        return _buildMainContent(context);
+      },
+    );
+  }
+
+  Widget _buildMainContent(BuildContext context) {
     final topRate = WastecBankData.trendingRates.isNotEmpty
         ? WastecBankData.trendingRates.first
         : null;

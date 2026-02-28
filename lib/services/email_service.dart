@@ -2,19 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 
-/// Email OTP Service using EmailJS (Free alternative to SMS)
-/// 
-/// Setup Instructions:
-/// 1. Go to https://www.emailjs.com/ and create a free account
-/// 2. Create an email service (Gmail, Outlook, etc.)
-/// 3. Create an email template with these variables:
-///    - {{to_email}} - recipient email
-///    - {{otp_code}} - the OTP code
-///    - {{app_name}} - Wastec Bank
-/// 4. Get your Service ID, Template ID, and Public Key
-/// 5. Update the constants below
-/// 
-/// Free tier: 200 emails/month (perfect for OTP)
 class EmailService {
   // ======================================
   // EmailJS Credentials - Configured ✅

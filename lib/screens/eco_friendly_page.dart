@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config/theme.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/connectivity_service.dart';
 import '../services/eco_product_service.dart';
 import '../widgets/cart_icon.dart';
+import '../widgets/offline_screen.dart';
 
 /// Displays sustainable living ideas and eco product listings.
 class EcoFriendlyPage extends StatefulWidget {
@@ -18,6 +21,8 @@ class EcoFriendlyPage extends StatefulWidget {
 }
 
 class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
+  final ConnectivityService _connectivityService = ConnectivityService();
+  
   static final List<_EcoTip> _ecoTips = [
     const _EcoTip(
       title: 'Start Home Composting with Cocopeat',
@@ -42,7 +47,38 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
   ];
 
   @override
-  Widget build(BuildContext context) => RefreshIndicator(
+  void dispose() {
+    _connectivityService.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndRefresh() async {
+    final isConnected = await _connectivityService.checkConnection();
+    if (isConnected) {
+      setState(() {
+        // Trigger rebuild with connection
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: _connectivityService.connectionStatus,
+      initialData: _connectivityService.isConnected,
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data ?? true;
+        
+        if (!isConnected) {
+          return OfflineScreen(onRetry: _checkAndRefresh);
+        }
+        
+        return _buildMainContent(context);
+      },
+    );
+  }
+
+  Widget _buildMainContent(BuildContext context) => RefreshIndicator(
         color: WastecColors.primaryGreen,
         onRefresh: () async {
           // Simulate data refresh
@@ -58,6 +94,7 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildWebsiteBanner(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                 child: Column(
@@ -91,6 +128,65 @@ class _EcoFriendlyPageState extends State<EcoFriendlyPage> {
           ),
         ),
       );
+
+  Widget _buildWebsiteBanner() {
+    return GestureDetector(
+      onTap: () async {
+        final Uri url = Uri.parse('https://be-ecofriendly.vercel.app');
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              WastecColors.primaryGreen,
+              WastecColors.primaryGreen.withOpacity(0.8),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: WastecColors.primaryGreen.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.web,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'For better experience use our website',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildSustainableTips(BuildContext context) => SizedBox(
         height: 200,

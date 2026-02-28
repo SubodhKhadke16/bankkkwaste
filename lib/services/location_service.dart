@@ -3,7 +3,6 @@ import 'dart:math' show cos, sqrt, asin;
 
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/saved_address.dart';
@@ -14,16 +13,23 @@ class LocationService {
   static const String _selectedAddressIdKey = 'selected_address_id';
   static const String _currentLocationKey = 'current_location';
 
-  /// Request location permission
+  /// Request location permission using native system dialog
   Future<bool> requestLocationPermission() async {
-    final status = await Permission.location.request();
-    return status.isGranted;
+    LocationPermission permission = await Geolocator.checkPermission();
+    
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    
+    return permission == LocationPermission.whileInUse || 
+           permission == LocationPermission.always;
   }
 
   /// Check if location permission is granted
   Future<bool> hasLocationPermission() async {
-    final status = await Permission.location.status;
-    return status.isGranted;
+    final permission = await Geolocator.checkPermission();
+    return permission == LocationPermission.whileInUse || 
+           permission == LocationPermission.always;
   }
 
   /// Get current device location
