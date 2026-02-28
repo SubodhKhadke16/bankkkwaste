@@ -53,7 +53,7 @@ class _DebugTransactionsScreenState extends State<DebugTransactionsScreen> {
 
     try {
       // Manually set wallet balance to 420
-      await UserService.setWalletBalance(userId, 420.0);
+      await UserService.setWalletBalance(userId, 420);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/user_service.dart';
 import '../config/theme.dart';
 import '../models/user.dart';
 import '../providers/theme_provider.dart';
 import '../services/auth_service.dart';
 import 'otp_login_screen.dart';
-import 'dev/developer_screen.dart';
+import 'wallet_screen.dart';
 import 'my_addresses_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _currentUser;
   bool _isLoading = true;
   String? _errorMessage;
+  double _walletBalance = 0.0;
 
   @override
   void initState() {
@@ -37,6 +39,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
           _errorMessage = null;
         });
+         // Load wallet balance if user is logged in
+        if (user != null) {
+          _loadWalletBalance();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -48,16 +54,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+Future<void> _loadWalletBalance() async {
+    try {
+      final userId = _authService.currentUserId;
+      if (userId != null) {
+        final userData = await UserService.getUser(userId);
+        if (userData != null && mounted) {
+          setState(() {
+            _walletBalance = (userData['walletBalance'] ?? 0.0).toDouble();
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading wallet balance: $e');
+    }
+  }
   // Check if current user is the developer (using email only, since Firebase doesn't expose passwords)
-  bool get _isDeveloper =>
-      _currentUser?.email.toLowerCase() == 'rohit@test.com';
-
+ 
   List<_ProfileOption> get _options => [
-        _ProfileOption(
-          title: 'My Orders / Scrap History',
-          icon: Icons.history,
-          builder: (_) => const MyOrdersPage(),
-        ),
+        
         _ProfileOption(
           title: 'Reward Points',
           icon: Icons.star,
@@ -98,12 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.settings,
           builder: (_) => const SettingsPage(),
         ),
-        if (_isDeveloper)
-          _ProfileOption(
-            title: '🔧 Developer Panel',
-            icon: Icons.developer_mode,
-            builder: (_) => const DeveloperScreen(),
-          ),
+        
         const _ProfileOption(
           title: 'Log Out',
           icon: Icons.logout,
@@ -291,9 +301,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildStatsSection() {
     final stats = [
-      ('₹ Earned', '₹2,450', Icons.currency_rupee),
-      ('Weight Recycled', '52 kg', Icons.recycling),
-      ('Eco Points', '120', Icons.star),
+      ('₹ Earned', '₹${_walletBalance.toStringAsFixed(2)}', Icons.currency_rupee, true), // true = tappable
+      ('Weight Recycled', '52 kg', Icons.recycling, false),
+      ('Eco Points', '120', Icons.star, false),
     ];
 
     return Row(
@@ -307,6 +317,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: stats[i].$1,
                 value: stats[i].$2,
                 icon: stats[i].$3,
+                isTappable: stats[i].$4,
+                onTap: stats[i].$4
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WalletScreen(),
+                          ),
+                        ).then((_) {
+                          // Refresh wallet balance when returning from wallet screen
+                          _loadWalletBalance();
+                        });
+                      }
+                    : null,
               ),
             ),
           ),
@@ -364,11 +388,15 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.isTappable = false,
+    this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final bool isTappable;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -401,6 +429,7 @@ class _StatCard extends StatelessWidget {
           ),
         ),
       );
+      
 }
 
 class _ProfileOption {

@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 
 import '../config/theme.dart';
 import '../models/order.dart';
+import '../services/connectivity_service.dart';
 import '../services/order_service.dart';
 import '../services/wallet_sync_service.dart';
+import '../widgets/offline_screen.dart';
 
 /// Unified Track Order Screen with tabs for Waste Bank and Eco-Friendly
 class TrackOrderUnifiedScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
   int _selectedFilter =
       0; // 0 = All, 1 = Pending, 2 = Confirmed, 3 = Processing, 4 = Delivered
   int _refreshKey = 0; // Key to force FutureBuilder refresh
+  final ConnectivityService _connectivityService = ConnectivityService();
 
   @override
   void initState() {
@@ -36,7 +39,45 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
   }
 
   @override
+  void dispose() {
+    _connectivityService.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndRefresh() async {
+    final isConnected = await _connectivityService.checkConnection();
+    if (isConnected) {
+      setState(() {
+        // Trigger rebuild with connection
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: _connectivityService.connectionStatus,
+      initialData: _connectivityService.isConnected,
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data ?? true;
+        
+        if (!isConnected) {
+          return widget.showScaffold
+              ? Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Track Order'),
+                  ),
+                  body: OfflineScreen(onRetry: _checkAndRefresh),
+                )
+              : OfflineScreen(onRetry: _checkAndRefresh);
+        }
+        
+        return _buildMainContent(context);
+      },
+    );
+  }
+
+  Widget _buildMainContent(BuildContext context) {
     final content = Column(
       children: [
         // Main Tab Navigation (Bank vs Eco)
@@ -826,6 +867,355 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
         ),
       );
 
+  Widget _buildJourneyProgress(Order order) {
+    final stages = _getJourneyStages(order.status);
+    final currentStageIndex = _getCurrentStageIndex(order.status);
+    final isDelivered = order.status.toLowerCase() == 'completed' || 
+                        order.status.toLowerCase() == 'delivered';
+    
+    // Define colors based on delivery status
+    final primaryColor = isDelivered ? Colors.green : Colors.orange;
+    final lightShade = isDelivered ? Colors.green.shade50 : Colors.orange.shade50;
+    final mediumShade = isDelivered ? Colors.green.shade100 : Colors.orange.shade100;
+    final borderShade = isDelivered ? Colors.green.shade200 : Colors.orange.shade200;
+    final progressBarShade = isDelivered ? Colors.green.shade400 : Colors.orange.shade400;
+    final darkShade = isDelivered ? Colors.green.shade700 : Colors.orange.shade700;
+    final darkerShade = isDelivered ? Colors.green.shade900 : Colors.orange.shade900;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            lightShade,
+            mediumShade.withOpacity(0.3),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderShade),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Journey Progress',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: mediumShade,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${currentStageIndex + 1} of ${stages.length}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: darkerShade,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.radio_button_checked, size: 12, color: darkShade),
+              const SizedBox(width: 6),
+              Text(
+                'Current: ${stages[currentStageIndex].title}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: darkerShade,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Progress Bar
+          Row(
+            children: List.generate(stages.length, (index) {
+              final isCompleted = index <= currentStageIndex;
+              return Expanded(
+                child: Container(
+                  height: 4,
+                  margin: EdgeInsets.only(right: index < stages.length - 1 ? 4 : 0),
+                  decoration: BoxDecoration(
+                    color: isCompleted ? progressBarShade : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 20),
+          // Timeline
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: stages.length,
+            itemBuilder: (context, index) {
+              final stage = stages[index];
+              final isCompleted = index < currentStageIndex;
+              final isCurrent = index == currentStageIndex;
+              final isPending = index > currentStageIndex;
+              
+              return _buildTimelineItem(
+                stage: stage,
+                isCompleted: isCompleted,
+                isCurrent: isCurrent,
+                isPending: isPending,
+                isFirst: index == 0,
+                isLast: index == stages.length - 1,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem({
+    required _JourneyStage stage,
+    required bool isCompleted,
+    required bool isCurrent,
+    required bool isPending,
+    required bool isFirst,
+    required bool isLast,
+  }) {
+    final bgColor = isCurrent
+        ? Colors.green.shade50
+        : isPending
+            ? Colors.white
+            : Colors.white;
+    
+    final borderColor = isCurrent
+        ? Colors.green.shade300
+        : isPending
+            ? Colors.grey.shade200
+            : Colors.green.shade200;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Timeline indicator column
+        Column(
+          children: [
+            // Circle indicator
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isCompleted || isCurrent ? Colors.green : Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCompleted || isCurrent ? Colors.green : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  isCompleted
+                      ? Icons.check
+                      : isCurrent
+                          ? stage.icon
+                          : stage.icon,
+                  size: 16,
+                  color: isCompleted || isCurrent ? Colors.white : Colors.grey.shade400,
+                ),
+              ),
+            ),
+            // Vertical line
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 40,
+                color: isCompleted ? Colors.green : Colors.grey.shade300,
+              ),
+          ],
+        ),
+        const SizedBox(width: 12),
+        // Content
+        Expanded(
+          child: Container(
+            margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      stage.locationIcon,
+                      size: 16,
+                      color: isCurrent
+                          ? Colors.green.shade700
+                          : isPending
+                              ? Colors.grey.shade500
+                              : Colors.green.shade600,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        stage.title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isPending ? Colors.grey.shade600 : Colors.black87,
+                        ),
+                      ),
+                    ),
+                    if (stage.time != null)
+                      Text(
+                        stage.time!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        stage.location,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (stage.description != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    stage.description!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+                if (isCurrent) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'On the way to the next step',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<_JourneyStage> _getJourneyStages(String status) {
+    return [
+      _JourneyStage(
+        title: 'Picked',
+        location: 'Pickup Point',
+        icon: Icons.home_outlined,
+        locationIcon: Icons.location_on,
+        time: '09:19 AM',
+        description: 'Waste partner collected your scrap from the scheduled address',
+      ),
+      _JourneyStage(
+        title: 'Shipped',
+        location: 'Transit Hub',
+        icon: Icons.local_shipping_outlined,
+        locationIcon: Icons.warehouse,
+        time: '10:45 AM',
+        description: 'Package is on the move to our processing centre',
+      ),
+      _JourneyStage(
+        title: 'Material Recovery Facility',
+        location: 'Waste MRF',
+        icon: Icons.factory_outlined,
+        locationIcon: Icons.business,
+        time: '12:30 PM',
+        description: 'Material reached the recovery facility for initial screening',
+      ),
+      _JourneyStage(
+        title: 'Segregated',
+        location: 'Sorting Facility',
+        icon: Icons.sort,
+        locationIcon: Icons.compare_arrows,
+        time: '02:05 PM',
+        description: 'Scrap is sorted into clean batches for recycling partners',
+      ),
+      _JourneyStage(
+        title: 'Shipping',
+        location: 'Outbound Logistics',
+        icon: Icons.local_shipping,
+        locationIcon: Icons.airport_shuttle,
+        description: 'Your sorted material is en route to the recycler hub',
+      ),
+      _JourneyStage(
+        title: 'Recycler',
+        location: 'Recycler Facility',
+        icon: Icons.recycling,
+        locationIcon: Icons.eco,
+        description: 'Recycler has received the material and final processing starts',
+      ),
+    ];
+  }
+
+  int _getCurrentStageIndex(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 0;
+      case 'confirmed':
+      case 'scheduled':
+        return 0; // Picked
+      case 'processing':
+        return 3; // Segregated
+      case 'completed':
+      case 'delivered':
+        return 5; // Recycler
+      default:
+        return 0;
+    }
+  }
+
   void _showFirebaseOrderDetails(BuildContext context, Order order) {
     showModalBottomSheet(
       context: context,
@@ -909,6 +1299,11 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Journey Progress for Waste Bank orders
+                  if (order.isWasteBankOrder) ...[
+                    _buildJourneyProgress(order),
+                    const SizedBox(height: 24),
+                  ],
                   // Items
                   const Text(
                     'Items',
@@ -1144,4 +1539,22 @@ class _TrackOrderUnifiedScreenState extends State<TrackOrderUnifiedScreen> {
     ];
     return months[month - 1];
   }
+}
+
+class _JourneyStage {
+  final String title;
+  final String location;
+  final IconData icon;
+  final IconData locationIcon;
+  final String? time;
+  final String? description;
+
+  _JourneyStage({
+    required this.title,
+    required this.location,
+    required this.icon,
+    required this.locationIcon,
+    this.time,
+    this.description,
+  });
 }

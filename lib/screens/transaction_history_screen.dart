@@ -12,8 +12,8 @@ class TransactionHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthService authService = AuthService();
-    final bool isLoggedIn = authService.currentUserId != null;
+    final authService = AuthService();
+    final isLoggedIn = authService.currentUserId != null;
     
     return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,

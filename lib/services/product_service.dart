@@ -1,11 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product.dart';
+import 'connectivity_service.dart';
 
 class ProductService {
   static final _firestore = FirebaseFirestore.instance;
   static final _productsCollection = _firestore.collection('products');
+  static final _connectivityService = ConnectivityService();
 
   static Future<List<Product>> fetchProducts() async {
+    // Return empty list if offline
+    if (!_connectivityService.isConnected) {
+      print('No internet connection - cannot fetch products');
+      return [];
+    }
+    
     try {
       final snapshot = await _productsCollection.get();
       return snapshot.docs

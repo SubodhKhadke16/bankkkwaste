@@ -8,6 +8,7 @@ import 'screens/auth/auth_gate.dart';
 import 'screens/cart_screen.dart';
 import 'services/cart_service.dart';
 import 'services/product_service.dart';
+import 'widgets/network_status_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,7 +48,7 @@ class WastecBankApp extends StatelessWidget {
                   theme: WastecTheme.lightTheme,
                   darkTheme: WastecTheme.darkTheme,
                   themeMode: provider.themeMode,
-                  home: const AuthGate(),
+                  home: const NetworkStatusBanner(child: AuthGate()),
                   debugShowCheckedModeBanner: false,
                   routes: {
                     '/cart': (context) => const CartScreen(),
